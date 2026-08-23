@@ -1,383 +1,365 @@
-/* =====================================================
-   GILL MARKET - MARKET.JS
-   Works with existing index.html
-   Does NOT require deleting old script.js
-   ===================================================== */
+"use strict";
 
-(function () {
+/*
+    =========================================================
+    GILL MARKET
+    FINAL FRONT-END VERSION
+    =========================================================
 
-    "use strict";
+    This version works without Supabase.
 
-    /* =========================
-       SETTINGS
-    ========================= */
+    Orders and seller services are saved in localStorage.
 
-    const COMMISSION = 30;
+    IMPORTANT:
+    localStorage is only browser/device storage.
+    It is NOT a real online database.
 
-    let selectedService = "";
-    let selectedPrice = 0;
+    Real online payments and permanent multi-user
+    database will need a backend/payment gateway later.
+*/
 
 
-    /* =========================
-       HELPERS
-    ========================= */
+/* =========================================================
+   SETTINGS
+   ========================================================= */
 
-    function get(id) {
-        return document.getElementById(id);
+const COMMISSION = 30;
+
+let selectedService = "";
+let selectedPrice = 0;
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function get(id) {
+    return document.getElementById(id);
+}
+
+
+function showMessage(message) {
+    alert(message);
+}
+
+
+function openModal(id) {
+
+    const modal = get(id);
+
+    if (modal) {
+        modal.classList.add("show");
     }
+}
 
-    function message(text) {
-        alert(text);
+
+function closeModal(id) {
+
+    const modal = get(id);
+
+    if (modal) {
+        modal.classList.remove("show");
     }
-
-    function openModal(id) {
-        const modal = get(id);
-
-        if (modal) {
-            modal.classList.add("show");
-        }
-    }
-
-    function closeModal(id) {
-        const modal = get(id);
-
-        if (modal) {
-            modal.classList.remove("show");
-        }
-    }
+}
 
 
-    /* =========================
-       MOBILE MENU
-    ========================= */
+/* =========================================================
+   MOBILE MENU
+   ========================================================= */
 
-    const menuBtn = get("menuBtn");
-    const nav = get("nav");
+const menuBtn = get("menuBtn");
+const nav = get("nav");
 
-    if (menuBtn && nav) {
+if (menuBtn && nav) {
 
-        menuBtn.addEventListener("click", function () {
+    menuBtn.addEventListener("click", function () {
 
-            nav.classList.toggle("open");
+        nav.classList.toggle("open");
+
+    });
+
+}
+
+
+/* Close mobile menu after navigation */
+
+if (nav) {
+
+    nav.querySelectorAll("a").forEach(function (link) {
+
+        link.addEventListener("click", function () {
+
+            nav.classList.remove("open");
 
         });
 
-    }
+    });
+
+}
 
 
-    /* =========================
-       FIND SERVICE
-    ========================= */
+/* =========================================================
+   FIND SERVICE
+   ========================================================= */
 
-    const findBtn = get("findBtn");
+const findBtn = get("findBtn");
 
-    if (findBtn) {
+if (findBtn) {
 
-        findBtn.addEventListener("click", function () {
+    findBtn.addEventListener("click", function () {
 
-            const services = get("services");
+        const services = get("services");
 
-            if (services) {
+        if (services) {
 
-                services.scrollIntoView({
-                    behavior: "smooth"
+            services.scrollIntoView({
+                behavior: "smooth"
+            });
+
+        }
+
+    });
+
+}
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+const loginBtn = get("loginBtn");
+
+if (loginBtn) {
+
+    loginBtn.addEventListener("click", function () {
+
+        const savedName =
+            localStorage.getItem("gillMarketName") || "";
+
+        const savedEmail =
+            localStorage.getItem("gillMarketEmail") || "";
+
+
+        if (get("loginName")) {
+            get("loginName").value = savedName;
+        }
+
+        if (get("loginEmail")) {
+            get("loginEmail").value = savedEmail;
+        }
+
+
+        openModal("loginModal");
+
+    });
+
+}
+
+
+/* Continue login */
+
+const continueBtn = get("continueBtn");
+
+if (continueBtn) {
+
+    continueBtn.addEventListener("click", function () {
+
+        const name =
+            get("loginName")?.value.trim();
+
+        const email =
+            get("loginEmail")?.value.trim();
+
+
+        if (!name) {
+
+            showMessage(
+                "Please enter your name."
+            );
+
+            return;
+        }
+
+
+        if (!email) {
+
+            showMessage(
+                "Please enter your email."
+            );
+
+            return;
+        }
+
+
+        if (!email.includes("@")) {
+
+            showMessage(
+                "Please enter a valid email address."
+            );
+
+            return;
+        }
+
+
+        localStorage.setItem(
+            "gillMarketName",
+            name
+        );
+
+        localStorage.setItem(
+            "gillMarketEmail",
+            email
+        );
+
+
+        showMessage(
+            "Welcome to GillMarket, " +
+            name +
+            "! 🎉"
+        );
+
+
+        closeModal("loginModal");
+
+    });
+
+}
+
+
+/* =========================================================
+   SELLER MODAL
+   ========================================================= */
+
+function openSeller() {
+
+    openModal("sellerModal");
+
+}
+
+
+const sellBtn = get("sellBtn");
+
+if (sellBtn) {
+
+    sellBtn.addEventListener(
+        "click",
+        openSeller
+    );
+
+}
+
+
+const sellHeroBtn = get("sellHeroBtn");
+
+if (sellHeroBtn) {
+
+    sellHeroBtn.addEventListener(
+        "click",
+        openSeller
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE BUTTONS
+   ========================================================= */
+
+document
+    .querySelectorAll("[data-close]")
+    .forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                const modalId =
+                    button.getAttribute("data-close");
+
+                closeModal(modalId);
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   CLOSE MODAL BY CLICKING OUTSIDE
+   ========================================================= */
+
+document
+    .querySelectorAll(".modal")
+    .forEach(function (modal) {
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (event.target === modal) {
+
+                    modal.classList.remove("show");
+
+                }
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   ESC KEY CLOSE
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+
+            document
+                .querySelectorAll(".modal.show")
+                .forEach(function (modal) {
+
+                    modal.classList.remove("show");
+
                 });
 
-            }
-
-        });
+        }
 
     }
+);
 
 
-    /* =========================
-       LOGIN
-    ========================= */
+/* =========================================================
+   ORDER BUTTONS
+   ========================================================= */
 
-    const loginBtn = get("loginBtn");
+document
+    .querySelectorAll(".order-btn")
+    .forEach(function (button) {
 
-    if (loginBtn) {
-
-        loginBtn.addEventListener("click", function () {
-
-            openModal("loginModal");
-
-        });
-
-    }
-
-
-    const continueBtn = get("continueBtn");
-
-    if (continueBtn) {
-
-        continueBtn.addEventListener(
+        button.addEventListener(
             "click",
             function () {
 
-                const name =
-                    get("loginName")?.value.trim();
+                selectedService =
+                    button.dataset.name || "";
 
-                const email =
-                    get("loginEmail")?.value.trim();
-
-
-                if (!name || !email) {
-
-                    message(
-                        "Please enter your name and email."
+                selectedPrice =
+                    Number(
+                        button.dataset.price || 0
                     );
-
-                    return;
-                }
-
-
-                localStorage.setItem(
-                    "gillMarketName",
-                    name
-                );
-
-                localStorage.setItem(
-                    "gillMarketEmail",
-                    email
-                );
-
-
-                message(
-                    "Welcome to Gill Market, " +
-                    name +
-                    "! 🎉"
-                );
-
-
-                closeModal("loginModal");
-
-            }
-        );
-
-    }
-
-
-    /* =========================
-       SELLER
-    ========================= */
-
-    function openSeller() {
-
-        openModal("sellerModal");
-
-    }
-
-
-    const sellBtn = get("sellBtn");
-
-    if (sellBtn) {
-
-        sellBtn.addEventListener(
-            "click",
-            openSeller
-        );
-
-    }
-
-
-    const sellHeroBtn = get("sellHeroBtn");
-
-    if (sellHeroBtn) {
-
-        sellHeroBtn.addEventListener(
-            "click",
-            openSeller
-        );
-
-    }
-
-
-    /* =========================
-       CLOSE BUTTONS
-    ========================= */
-
-    document
-        .querySelectorAll("[data-close]")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    const modalId =
-                        button.getAttribute(
-                            "data-close"
-                        );
-
-                    closeModal(modalId);
-
-                }
-            );
-
-        });
-
-
-    /* =========================
-       CLOSE MODAL
-       BY CLICKING OUTSIDE
-    ========================= */
-
-    document
-        .querySelectorAll(".modal")
-        .forEach(function (modal) {
-
-            modal.addEventListener(
-                "click",
-                function (event) {
-
-                    if (
-                        event.target === modal
-                    ) {
-
-                        modal.classList.remove(
-                            "show"
-                        );
-
-                    }
-
-                }
-            );
-
-        });
-
-
-    /* =========================
-       ORDER BUTTONS
-    ========================= */
-
-    document
-        .querySelectorAll(".order")
-        .forEach(function (button) {
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    selectedService =
-                        button.dataset.name || "";
-
-                    selectedPrice =
-                        Number(
-                            button.dataset.price || 0
-                        );
-
-
-                    if (
-                        !selectedService ||
-                        selectedPrice <= 0
-                    ) {
-
-                        message(
-                            "Service information is missing."
-                        );
-
-                        return;
-                    }
-
-
-                    const commissionAmount =
-                        selectedPrice *
-                        COMMISSION /
-                        100;
-
-
-                    const sellerAmount =
-                        selectedPrice -
-                        commissionAmount;
-
-
-                    const summary =
-                        get("summary");
-
-
-                    if (summary) {
-
-                        summary.innerHTML =
-                            "<strong>" +
-                            selectedService +
-                            "</strong>" +
-                            "<br><br>" +
-
-                            "Order Price: ₹" +
-                            selectedPrice.toFixed(2) +
-
-                            "<br>" +
-
-                            "Gill Market 30%: ₹" +
-                            commissionAmount.toFixed(2) +
-
-                            "<br>" +
-
-                            "Seller 70%: ₹" +
-                            sellerAmount.toFixed(2);
-
-                    }
-
-
-                    openModal("orderModal");
-
-                }
-            );
-
-        });
-
-
-    /* =========================
-       SUBMIT ORDER
-    ========================= */
-
-    const submitOrder =
-        get("submitOrder");
-
-    if (submitOrder) {
-
-        submitOrder.addEventListener(
-            "click",
-            function () {
-
-                const name =
-                    get("customerName")
-                        ?.value
-                        .trim();
-
-                const email =
-                    get("customerEmail")
-                        ?.value
-                        .trim();
-
-                const details =
-                    get("details")
-                        ?.value
-                        .trim();
-
-
-                if (
-                    !name ||
-                    !email ||
-                    !details
-                ) {
-
-                    message(
-                        "Please fill all order details."
-                    );
-
-                    return;
-                }
 
 
                 if (
                     !selectedService ||
-                    !selectedPrice
+                    selectedPrice <= 0
                 ) {
 
-                    message(
-                        "Please select a service first."
+                    showMessage(
+                        "Service information is unavailable."
                     );
 
                     return;
@@ -395,266 +377,482 @@
                     commissionAmount;
 
 
-                const order = {
-
-                    id:
-                        "GM-" +
-                        Date.now(),
-
-                    service:
-                        selectedService,
-
-                    customer_name:
-                        name,
-
-                    customer_email:
-                        email,
-
-                    details:
-                        details,
-
-                    price:
-                        selectedPrice,
-
-                    commission:
-                        COMMISSION,
-
-                    commission_amount:
-                        commissionAmount,
-
-                    seller_amount:
-                        sellerAmount,
-
-                    status:
-                        "pending",
-
-                    created_at:
-                        new Date().toISOString()
-
-                };
+                const summary =
+                    get("orderSummary");
 
 
-                /* =====================
-                   SAVE ORDER LOCALLY
-                ===================== */
+                if (summary) {
 
-                const oldOrders =
+                    summary.innerHTML =
+
+                        "<strong>" +
+                        selectedService +
+                        "</strong>" +
+
+                        "<br><br>" +
+
+                        "Order Price: ₹" +
+                        selectedPrice.toFixed(2) +
+
+                        "<br>" +
+
+                        "GillMarket 30%: ₹" +
+                        commissionAmount.toFixed(2) +
+
+                        "<br>" +
+
+                        "Seller 70%: ₹" +
+                        sellerAmount.toFixed(2);
+
+                }
+
+
+                /* Prefill saved customer information */
+
+                const savedName =
+                    localStorage.getItem(
+                        "gillMarketName"
+                    ) || "";
+
+                const savedEmail =
+                    localStorage.getItem(
+                        "gillMarketEmail"
+                    ) || "";
+
+
+                if (get("customerName")) {
+                    get("customerName").value =
+                        savedName;
+                }
+
+                if (get("customerEmail")) {
+                    get("customerEmail").value =
+                        savedEmail;
+                }
+
+
+                openModal("orderModal");
+
+            }
+        );
+
+    });
+
+
+/* =========================================================
+   SUBMIT ORDER
+   ========================================================= */
+
+const submitOrder = get("submitOrder");
+
+if (submitOrder) {
+
+    submitOrder.addEventListener(
+        "click",
+        function () {
+
+            const customerName =
+                get("customerName")
+                    ?.value
+                    .trim();
+
+            const customerEmail =
+                get("customerEmail")
+                    ?.value
+                    .trim();
+
+            const details =
+                get("details")
+                    ?.value
+                    .trim();
+
+
+            if (!selectedService) {
+
+                showMessage(
+                    "Please select a service first."
+                );
+
+                return;
+            }
+
+
+            if (!customerName) {
+
+                showMessage(
+                    "Please enter your name."
+                );
+
+                return;
+            }
+
+
+            if (!customerEmail) {
+
+                showMessage(
+                    "Please enter your email."
+                );
+
+                return;
+            }
+
+
+            if (!customerEmail.includes("@")) {
+
+                showMessage(
+                    "Please enter a valid email address."
+                );
+
+                return;
+            }
+
+
+            if (!details) {
+
+                showMessage(
+                    "Please describe what you need."
+                );
+
+                return;
+            }
+
+
+            const commissionAmount =
+                selectedPrice *
+                COMMISSION /
+                100;
+
+
+            const sellerAmount =
+                selectedPrice -
+                commissionAmount;
+
+
+            const order = {
+
+                id:
+                    "GM-" +
+                    Date.now(),
+
+                service:
+                    selectedService,
+
+                customer_name:
+                    customerName,
+
+                customer_email:
+                    customerEmail,
+
+                details:
+                    details,
+
+                price:
+                    selectedPrice,
+
+                commission_percent:
+                    COMMISSION,
+
+                commission_amount:
+                    commissionAmount,
+
+                seller_amount:
+                    sellerAmount,
+
+                status:
+                    "pending",
+
+                created_at:
+                    new Date().toISOString()
+
+            };
+
+
+            /* Get old orders */
+
+            let orders = [];
+
+            try {
+
+                orders =
                     JSON.parse(
                         localStorage.getItem(
                             "gillMarketOrders"
                         ) || "[]"
                     );
 
-
-                oldOrders.push(order);
-
-
-                localStorage.setItem(
-                    "gillMarketOrders",
-                    JSON.stringify(
-                        oldOrders
-                    )
-                );
-
-
-                /* =====================
-                   SUCCESS
-                ===================== */
-
-                message(
-                    "Order successfully submitted! 🎉" +
-
-                    "\n\nOrder ID: " +
-                    order.id +
-
-                    "\nService: " +
-                    selectedService +
-
-                    "\nPrice: ₹" +
-                    selectedPrice +
-
-                    "\nGill Market 30%: ₹" +
-                    commissionAmount.toFixed(2) +
-
-                    "\nSeller 70%: ₹" +
-                    sellerAmount.toFixed(2)
-                );
-
-
-                closeModal("orderModal");
-
-
-                /* Clear form */
-
-                if (get("customerName")) {
-                    get("customerName").value = "";
+                if (!Array.isArray(orders)) {
+                    orders = [];
                 }
 
-                if (get("customerEmail")) {
-                    get("customerEmail").value = "";
-                }
+            } catch (error) {
 
-                if (get("details")) {
-                    get("details").value = "";
-                }
+                orders = [];
 
             }
-        );
-
-    }
 
 
-    /* =========================
-       SELLER SERVICE
-    ========================= */
+            /* Add new order */
 
-    const submitSeller =
-        get("submitSeller");
+            orders.push(order);
 
-    if (submitSeller) {
 
-        submitSeller.addEventListener(
-            "click",
-            function () {
+            /* Save */
 
-                const sellerName =
-                    get("sellerName")
+            localStorage.setItem(
+                "gillMarketOrders",
+                JSON.stringify(orders)
+            );
+
+
+            /* Success */
+
+            showMessage(
+
+                "Order successfully submitted! 🎉" +
+
+                "\n\nOrder ID: " +
+                order.id +
+
+                "\nService: " +
+                order.service +
+
+                "\nPrice: ₹" +
+                order.price +
+
+                "\nGillMarket 30%: ₹" +
+                commissionAmount.toFixed(2) +
+
+                "\nSeller 70%: ₹" +
+                sellerAmount.toFixed(2)
+
+            );
+
+
+            closeModal("orderModal");
+
+
+            /* Clear details */
+
+            if (get("details")) {
+                get("details").value = "";
+            }
+
+
+            /* Keep customer name/email */
+
+            selectedService = "";
+            selectedPrice = 0;
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   SELLER SERVICE SUBMISSION
+   ========================================================= */
+
+const submitSeller = get("submitSeller");
+
+if (submitSeller) {
+
+    submitSeller.addEventListener(
+        "click",
+        function () {
+
+            const sellerName =
+                get("sellerName")
+                    ?.value
+                    .trim();
+
+            const sellerService =
+                get("sellerService")
+                    ?.value
+                    .trim();
+
+            const sellerPrice =
+                Number(
+                    get("sellerPrice")
                         ?.value
-                        .trim();
+                );
 
-                const serviceName =
-                    get("sellerService")
-                        ?.value
-                        .trim();
-
-                const price =
-                    Number(
-                        get("sellerPrice")
-                            ?.value
-                    );
-
-                const description =
-                    get("sellerDescription")
-                        ?.value
-                        .trim();
+            const sellerDescription =
+                get("sellerDescription")
+                    ?.value
+                    .trim();
 
 
-                if (
-                    !sellerName ||
-                    !serviceName ||
-                    !price ||
-                    !description
-                ) {
+            if (!sellerName) {
 
-                    message(
-                        "Please fill all service details."
-                    );
+                showMessage(
+                    "Please enter your name."
+                );
 
-                    return;
-                }
+                return;
+            }
 
 
-                const service = {
+            if (!sellerService) {
 
-                    id:
-                        "SERVICE-" +
-                        Date.now(),
+                showMessage(
+                    "Please enter your service name."
+                );
 
-                    seller_name:
-                        sellerName,
-
-                    service_name:
-                        serviceName,
-
-                    price:
-                        price,
-
-                    description:
-                        description,
-
-                    commission:
-                        COMMISSION,
-
-                    status:
-                        "pending",
-
-                    created_at:
-                        new Date().toISOString()
-
-                };
+                return;
+            }
 
 
-                /* =====================
-                   SAVE SERVICE
-                ===================== */
+            if (
+                !sellerPrice ||
+                sellerPrice <= 0
+            ) {
 
-                const oldServices =
+                showMessage(
+                    "Please enter a valid price."
+                );
+
+                return;
+            }
+
+
+            if (!sellerDescription) {
+
+                showMessage(
+                    "Please describe your service."
+                );
+
+                return;
+            }
+
+
+            const service = {
+
+                id:
+                    "SERVICE-" +
+                    Date.now(),
+
+                seller_name:
+                    sellerName,
+
+                service_name:
+                    sellerService,
+
+                price:
+                    sellerPrice,
+
+                description:
+                    sellerDescription,
+
+                commission_percent:
+                    COMMISSION,
+
+                status:
+                    "pending",
+
+                created_at:
+                    new Date().toISOString()
+
+            };
+
+
+            let services = [];
+
+            try {
+
+                services =
                     JSON.parse(
                         localStorage.getItem(
                             "gillMarketServices"
                         ) || "[]"
                     );
 
-
-                oldServices.push(service);
-
-
-                localStorage.setItem(
-                    "gillMarketServices",
-                    JSON.stringify(
-                        oldServices
-                    )
-                );
-
-
-                message(
-                    "Your service was submitted successfully! 🎉" +
-
-                    "\n\nService: " +
-                    serviceName +
-
-                    "\nPrice: ₹" +
-                    price +
-
-                    "\nCommission: " +
-                    COMMISSION +
-                    "%"
-                );
-
-
-                closeModal("sellerModal");
-
-
-                /* Clear form */
-
-                if (get("sellerName")) {
-                    get("sellerName").value = "";
+                if (!Array.isArray(services)) {
+                    services = [];
                 }
 
-                if (get("sellerService")) {
-                    get("sellerService").value = "";
-                }
+            } catch (error) {
 
-                if (get("sellerPrice")) {
-                    get("sellerPrice").value = "";
-                }
-
-                if (get("sellerDescription")) {
-                    get("sellerDescription").value = "";
-                }
+                services = [];
 
             }
-        );
-
-    }
 
 
-    /* =========================
-       START
-    ========================= */
+            services.push(service);
 
-    console.log(
-        "GillMarket market.js loaded successfully."
+
+            localStorage.setItem(
+                "gillMarketServices",
+                JSON.stringify(services)
+            );
+
+
+            showMessage(
+
+                "Your service was submitted successfully! 🎉" +
+
+                "\n\nService: " +
+                sellerService +
+
+                "\nPrice: ₹" +
+                sellerPrice +
+
+                "\nCommission: " +
+                COMMISSION +
+                "%"
+
+            );
+
+
+            closeModal("sellerModal");
+
+
+            /* Clear seller form */
+
+            if (get("sellerName")) {
+                get("sellerName").value = "";
+            }
+
+            if (get("sellerService")) {
+                get("sellerService").value = "";
+            }
+
+            if (get("sellerPrice")) {
+                get("sellerPrice").value = "";
+            }
+
+            if (get("sellerDescription")) {
+                get("sellerDescription").value = "";
+            }
+
+        }
     );
 
-})();
+}
+
+
+/* =========================================================
+   DEBUG / TEST
+   ========================================================= */
+
+console.log(
+    "GillMarket loaded successfully."
+);
+
+console.log(
+    "Saved orders:",
+    JSON.parse(
+        localStorage.getItem(
+            "gillMarketOrders"
+        ) || "[]"
+    )
+);
+
+console.log(
+    "Saved services:",
+    JSON.parse(
+        localStorage.getItem(
+            "gillMarketServices"
+        ) || "[]"
+    )
+);
