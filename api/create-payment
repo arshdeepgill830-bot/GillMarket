@@ -1,0 +1,253 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods":
+    "POST, OPTIONS"
+};
+
+Deno.serve(async (req) => {
+
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: corsHeaders
+    });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({
+        message: "Method not allowed"
+      }),
+      {
+        status: 405,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+  }
+
+  try {
+
+    const {
+      order_id
+    } = await req.json();
+
+    if (!order_id) {
+      return new Response(
+        JSON.stringify({
+          message: "order_id is required"
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+
+    const supabase =
+      createClient(
+        Deno.env.get(
+          "SUPABASE_URL"
+        )!,
+        Deno.env.get(
+          "SUPABASE_SERVICE_ROLE_KEY"
+        )!
+      );
+
+    const {
+      data: order,
+      error
+    } = await supabase
+      .from("orders")
+      .select(
+        "id, amount, payment_status"
+      )
+      .eq(
+        "id",
+        order_id
+      )
+      .single();
+
+    if (error || !order) {
+      return new Response(
+        JSON.stringify({
+          message: "Order not found"
+        }),
+        {
+          status: 404,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+    }
+
+    if (
+      order.payment_status === "paid"
+    ) {
+      return new Response(
+        JSON.stringify({
+          message: "Order already paid"
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+    }
+
+    const amount =
+      Number(order.amount);
+
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
+      return new Response(
+        JSON.stringify({
+          message:
+            "Invalid order amount"
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+    }
+
+    const razorpayResponse =
+      await fetch(
+        "https://api.razorpay.com/v1/orders",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            "Authorization":
+              "Basic " +
+              btoa(
+                Deno.env.get(
+                  "RAZORPAY_KEY_ID"
+                ) +
+                ":" +
+                Deno.env.get(
+                  "RAZORPAY_KEY_SECRET"
+                )
+              )
+          },
+
+          body: JSON.stringify({
+
+            amount:
+              Math.round(
+                amount * 100
+              ),
+
+            currency:
+              "INR",
+
+            receipt:
+              "GM_" +
+              String(
+                order.id
+              ).slice(0, 20),
+
+            notes: {
+              gillmarket_order_id:
+                String(order.id)
+            }
+
+          })
+        }
+      );
+
+    const razorpayOrder =
+      await razorpayResponse.json();
+
+    if (
+      !razorpayResponse.ok
+    ) {
+      return new Response(
+        JSON.stringify({
+          message:
+            razorpayOrder?.error
+              ?.description ||
+            "Razorpay order creation failed"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type":
+              "application/json"
+          }
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+
+        id:
+          razorpayOrder.id,
+
+        amount:
+          razorpayOrder.amount,
+
+        currency:
+          razorpayOrder.currency
+
+      }),
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type":
+            "application/json"
+        }
+      }
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    return new Response(
+      JSON.stringify({
+        message:
+          error?.message ||
+          "Payment order creation failed"
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type":
+            "application/json"
+        }
+      }
+    );
+
+  }
+
+});
