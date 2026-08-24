@@ -2,512 +2,820 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GillMarket</title>
-    <meta name="description" content="GillMarket - Digital services marketplace">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="index.css">
+    <meta
+        name="description"
+        content="GillMarket - Find digital services and hire talented freelancers."
+    >
+
+    <meta
+        name="theme-color"
+        content="#2563eb"
+    >
+
+    <title>GillMarket - Digital Services Marketplace</title>
+
+    <!-- MAIN CSS -->
+    <link
+        rel="stylesheet"
+        href="index.css"
+    >
 </head>
 
 <body>
 
-<header class="header">
+    <!-- ================= HEADER ================= -->
 
-    <div class="logo">
-        Gill<span>Market</span>
-    </div>
+    <header class="header">
 
-    <button class="menu-btn" id="menuBtn" type="button">
-        ☰
-    </button>
+        <div class="container nav-container">
 
-    <nav id="nav">
-        <a href="#home">Home</a>
-        <a href="#services">Services</a>
-        <a href="#how">How It Works</a>
-
-        <button
-            class="primary-btn"
-            id="loginBtn"
-            type="button">
-            Login
-        </button>
-    </nav>
-
-</header>
-
-
-<main>
-
-<section class="hero" id="home">
-
-    <div class="hero-content">
-
-        <div class="badge">
-            🚀 Welcome to GillMarket
-        </div>
-
-        <h1>
-            Find Skills.
-            <span>Get Work Done.</span>
-        </h1>
-
-        <p>
-            Hire talented people for thumbnails, video editing,
-            graphic design, websites, AI designs and more.
-        </p>
-
-        <div class="hero-buttons">
+            <a
+                href="#home"
+                class="logo"
+            >
+                GillMarket
+            </a>
 
             <button
-                class="primary-btn"
-                id="findBtn"
-                type="button">
-                Find a Service
+                id="menuBtn"
+                class="menu-btn"
+                type="button"
+                aria-label="Open menu"
+            >
+                ☰
             </button>
+
+            <nav id="nav" class="nav">
+
+                <a href="#home">
+                    Home
+                </a>
+
+                <a href="#services">
+                    Services
+                </a>
+
+                <a href="#how">
+                    How It Works
+                </a>
+
+                <button
+                    id="loginBtn"
+                    class="nav-login"
+                    type="button"
+                >
+                    Login
+                </button>
+
+            </nav>
+
+        </div>
+
+    </header>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main>
+
+        <!-- ================= HERO ================= -->
+
+        <section
+            id="home"
+            class="hero"
+        >
+
+            <div class="container hero-content">
+
+                <div class="hero-text">
+
+                    <span class="hero-badge">
+                        🚀 GillMarket
+                    </span>
+
+                    <h1>
+                        Find Skills.
+                        <br>
+                        <span>
+                            Get Work Done.
+                        </span>
+                    </h1>
+
+                    <p>
+                        Hire talented freelancers for
+                        thumbnails, video editing,
+                        graphic design, websites,
+                        AI designs and more.
+                    </p>
+
+                    <div class="hero-buttons">
+
+                        <button
+                            id="findBtn"
+                            class="btn btn-primary"
+                            type="button"
+                        >
+                            Find a Service
+                        </button>
+
+                        <button
+                            id="sellHeroBtn"
+                            class="btn btn-secondary"
+                            type="button"
+                        >
+                            Sell Your Service
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SERVICES ================= -->
+
+        <section
+            id="services"
+            class="services-section"
+        >
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <span>
+                        POPULAR SERVICES
+                    </span>
+
+                    <h2>
+                        What Do You Need?
+                    </h2>
+
+                    <p>
+                        Choose a service and place
+                        your order.
+                    </p>
+
+                </div>
+
+
+                <!-- SEARCH -->
+
+                <div class="search-box">
+
+                    <input
+                        id="searchInput"
+                        type="search"
+                        placeholder="Search services..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <!-- SERVICE GRID -->
+
+                <div class="services-grid">
+
+
+                    <!-- THUMBNAIL -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            🎨
+                        </div>
+
+                        <h3>
+                            Thumbnail Design
+                        </h3>
+
+                        <p>
+                            Professional YouTube
+                            and social media thumbnails.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹99
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="Thumbnail Design"
+                                data-price="99"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- VIDEO -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            🎬
+                        </div>
+
+                        <h3>
+                            Video Editing
+                        </h3>
+
+                        <p>
+                            Reels, Shorts and YouTube
+                            video editing.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹199
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="Video Editing"
+                                data-price="199"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- SOCIAL MEDIA -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            📱
+                        </div>
+
+                        <h3>
+                            Social Media Design
+                        </h3>
+
+                        <p>
+                            Instagram posts, banners
+                            and social graphics.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹149
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="Social Media Design"
+                                data-price="149"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- WEBSITE -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            💻
+                        </div>
+
+                        <h3>
+                            Website Design
+                        </h3>
+
+                        <p>
+                            Modern websites for
+                            businesses and creators.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹499
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="Website Design"
+                                data-price="499"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- AI IMAGE -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            🤖
+                        </div>
+
+                        <h3>
+                            AI Image Design
+                        </h3>
+
+                        <p>
+                            AI posters, creative
+                            images and designs.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹99
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="AI Image Design"
+                                data-price="99"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- CONTENT -->
+
+                    <article class="service-card">
+
+                        <div class="service-icon">
+                            ✍️
+                        </div>
+
+                        <h3>
+                            Content Writing
+                        </h3>
+
+                        <p>
+                            Scripts, captions and
+                            social media content.
+                        </p>
+
+                        <div class="service-bottom">
+
+                            <strong>
+                                From ₹99
+                            </strong>
+
+                            <button
+                                class="order-btn"
+                                type="button"
+                                data-name="Content Writing"
+                                data-price="99"
+                            >
+                                Order
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= HOW IT WORKS ================= -->
+
+        <section
+            id="how"
+            class="how-section"
+        >
+
+            <div class="container">
+
+                <div class="section-heading">
+
+                    <span>
+                        SIMPLE PROCESS
+                    </span>
+
+                    <h2>
+                        How GillMarket Works
+                    </h2>
+
+                </div>
+
+
+                <div class="steps-grid">
+
+                    <div class="step">
+
+                        <div class="step-number">
+                            1
+                        </div>
+
+                        <h3>
+                            Choose a Service
+                        </h3>
+
+                        <p>
+                            Find the service you need.
+                        </p>
+
+                    </div>
+
+
+                    <div class="step">
+
+                        <div class="step-number">
+                            2
+                        </div>
+
+                        <h3>
+                            Place an Order
+                        </h3>
+
+                        <p>
+                            Tell the seller what
+                            you need.
+                        </p>
+
+                    </div>
+
+
+                    <div class="step">
+
+                        <div class="step-number">
+                            3
+                        </div>
+
+                        <h3>
+                            Work Gets Done
+                        </h3>
+
+                        <p>
+                            The seller completes
+                            your order.
+                        </p>
+
+                    </div>
+
+
+                    <div class="step">
+
+                        <div class="step-number">
+                            4
+                        </div>
+
+                        <h3>
+                            Complete & Review
+                        </h3>
+
+                        <p>
+                            Approve the work and
+                            leave a review.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SELLER ================= -->
+
+        <section
+            class="seller-section"
+        >
+
+            <div class="container">
+
+                <div class="seller-box">
+
+                    <div>
+
+                        <span>
+                            FOR FREELANCERS
+                        </span>
+
+                        <h2>
+                            Turn Your Skills
+                            Into Income
+                        </h2>
+
+                        <p>
+                            Offer your skills on
+                            GillMarket and find
+                            customers.
+                        </p>
+
+                        <strong>
+                            Platform commission:
+                            30%
+                        </strong>
+
+                    </div>
+
+                    <button
+                        id="sellBtn"
+                        class="btn btn-primary"
+                        type="button"
+                    >
+                        Start Selling
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        <div class="container">
+
+            <h3>
+                GillMarket
+            </h3>
+
+            <p>
+                A simple marketplace for
+                digital services.
+            </p>
+
+            <p>
+                Platform commission: 30%
+            </p>
+
+            <p>
+                © 2026 GillMarket
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <!-- ================= LOGIN MODAL ================= -->
+
+    <div
+        id="loginModal"
+        class="modal"
+    >
+
+        <div class="modal-content">
 
             <button
-                class="secondary-btn"
-                id="sellHeroBtn"
-                type="button">
-                Sell Your Service
+                class="modal-close"
+                type="button"
+                data-close="loginModal"
+            >
+                ×
             </button>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<section id="services">
-
-    <div class="section-title">
-
-        <small>POPULAR SERVICES</small>
-
-        <h2>What Do You Need?</h2>
-
-        <p>
-            Choose a service and place your order.
-        </p>
-
-    </div>
-
-
-    <div class="service-grid">
-
-        <article class="service-card">
-
-            <div class="service-icon">🎨</div>
-
-            <h3>Thumbnail Design</h3>
-
-            <p>
-                Professional YouTube and social media thumbnails.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Thumbnail Design"
-                    data-price="99"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-
-        <article class="service-card">
-
-            <div class="service-icon">🎬</div>
-
-            <h3>Video Editing</h3>
-
-            <p>
-                Reels, Shorts and YouTube video editing.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹199</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Video Editing"
-                    data-price="199"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-
-        <article class="service-card">
-
-            <div class="service-icon">📱</div>
-
-            <h3>Social Media Design</h3>
-
-            <p>
-                Instagram posts, banners and social graphics.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹149</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Social Media Design"
-                    data-price="149"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-
-        <article class="service-card">
-
-            <div class="service-icon">💻</div>
-
-            <h3>Website Design</h3>
-
-            <p>
-                Modern websites for businesses and creators.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹499</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Website Design"
-                    data-price="499"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-
-        <article class="service-card">
-
-            <div class="service-icon">🤖</div>
-
-            <h3>AI Image Design</h3>
-
-            <p>
-                AI posters, creative images and designs.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="AI Image Design"
-                    data-price="99"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-
-        <article class="service-card">
-
-            <div class="service-icon">✍️</div>
-
-            <h3>Content Writing</h3>
-
-            <p>
-                Scripts, captions and social media content.
-            </p>
-
-            <div class="card-bottom">
-
-                <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Content Writing"
-                    data-price="99"
-                    type="button">
-                    Order
-                </button>
-
-            </div>
-
-        </article>
-
-    </div>
-
-</section>
-
-
-<section id="how">
-
-    <div class="section-title">
-
-        <small>SIMPLE PROCESS</small>
-
-        <h2>How GillMarket Works</h2>
-
-    </div>
-
-
-    <div class="steps">
-
-        <div class="step">
-            <div class="number">1</div>
-            <h3>Choose a Service</h3>
-            <p>Find the service you need.</p>
-        </div>
-
-        <div class="step">
-            <div class="number">2</div>
-            <h3>Place an Order</h3>
-            <p>Tell the seller what you need.</p>
-        </div>
-
-        <div class="step">
-            <div class="number">3</div>
-            <h3>Work Gets Done</h3>
-            <p>The seller completes your order.</p>
-        </div>
-
-        <div class="step">
-            <div class="number">4</div>
-            <h3>Complete & Review</h3>
-            <p>Approve the work and leave a review.</p>
-        </div>
-
-    </div>
-
-</section>
-
-
-<section class="seller-section">
-
-    <div class="seller-box">
-
-        <div>
-
-            <small>FOR FREELANCERS</small>
 
             <h2>
-                Turn Your Skills Into Income
+                Login to GillMarket
             </h2>
 
             <p>
-                Offer your skills on GillMarket and find customers.
+                Enter your details to continue.
             </p>
 
-            <p class="commission">
-                Platform commission:
-                <strong>30%</strong>
-            </p>
+            <label for="loginName">
+                Your name
+            </label>
+
+            <input
+                id="loginName"
+                type="text"
+                placeholder="Your name"
+            >
+
+            <label for="loginEmail">
+                Your email
+            </label>
+
+            <input
+                id="loginEmail"
+                type="email"
+                placeholder="you@example.com"
+            >
+
+            <button
+                id="continueBtn"
+                class="btn btn-primary full-btn"
+                type="button"
+            >
+                Continue
+            </button>
 
         </div>
 
-        <button
-            class="primary-btn"
-            id="sellBtn"
-            type="button">
-            Start Selling
-        </button>
-
     </div>
 
-</section>
 
-</main>
+    <!-- ================= ORDER MODAL ================= -->
 
+    <div
+        id="orderModal"
+        class="modal"
+    >
 
-<footer>
+        <div class="modal-content">
 
-    <div class="logo">
-        Gill<span>Market</span>
-    </div>
+            <button
+                class="modal-close"
+                type="button"
+                data-close="orderModal"
+            >
+                ×
+            </button>
 
-    <p>
-        A simple marketplace for digital services.
-    </p>
+            <h2>
+                Place Order
+            </h2>
 
-    <p>
-        Platform commission:
-        <strong>30%</strong>
-    </p>
+            <div
+                id="summary"
+                class="order-summary"
+            >
+                Select a service to continue.
+            </div>
 
-    <p>
-        © 2026 GillMarket
-    </p>
+            <label for="customerName">
+                Your name
+            </label>
 
-</footer>
+            <input
+                id="customerName"
+                type="text"
+                placeholder="Enter your name"
+                autocomplete="name"
+            >
 
+            <label for="customerEmail">
+                Your email
+            </label>
 
-<!-- LOGIN -->
+            <input
+                id="customerEmail"
+                type="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+            >
 
-<div class="modal" id="loginModal">
+            <label for="details">
+                What do you need?
+            </label>
 
-    <div class="modal-box">
+            <textarea
+                id="details"
+                rows="5"
+                placeholder="Describe what you need..."
+            ></textarea>
 
-        <button
-            class="close-btn"
-            data-close="loginModal"
-            type="button">
-            ×
-        </button>
+            <button
+                id="submitOrder"
+                class="btn btn-primary full-btn"
+                type="button"
+            >
+                Place Order
+            </button>
 
-        <h2>Login</h2>
-
-        <p>
-            Save your GillMarket profile.
-        </p>
-
-        <input
-            id="loginName"
-            type="text"
-            placeholder="Enter your name">
-
-        <input
-            id="loginEmail"
-            type="email"
-            placeholder="Enter your email">
-
-        <button
-            class="primary-btn full-btn"
-            id="continueBtn"
-            type="button">
-            Continue
-        </button>
-
-    </div>
-
-</div>
-
-
-<!-- ORDER -->
-
-<div class="modal" id="orderModal">
-
-    <div class="modal-box">
-
-        <button
-            class="close-btn"
-            data-close="orderModal"
-            type="button">
-            ×
-        </button>
-
-        <h2>Place Order</h2>
-
-        <div
-            class="summary"
-            id="summary">
         </div>
 
-        <input
-            id="customerName"
-            type="text"
-            placeholder="Your name">
+    </div>
 
-        <input
-            id="customerEmail"
-            type="email"
-            placeholder="Your email">
 
-        <textarea
-            id="details"
-            rows="5"
-            placeholder="Describe what you need...">
-        </textarea>
+    <!-- ================= SELLER MODAL ================= -->
 
-        <button
-            class="primary-btn full-btn"
-            id="submitOrder"
-            type="button">
-            Submit Order
-        </button>
+    <div
+        id="sellerModal"
+        class="modal"
+    >
+
+        <div class="modal-content">
+
+            <button
+                class="modal-close"
+                type="button"
+                data-close="sellerModal"
+            >
+                ×
+            </button>
+
+            <h2>
+                Start Selling
+            </h2>
+
+            <p>
+                Add your digital service to
+                GillMarket.
+            </p>
+
+            <label for="sellerName">
+                Your name
+            </label>
+
+            <input
+                id="sellerName"
+                type="text"
+                placeholder="Your name"
+            >
+
+            <label for="sellerService">
+                Service name
+            </label>
+
+            <input
+                id="sellerService"
+                type="text"
+                placeholder="Example: Logo Design"
+            >
+
+            <label for="sellerPrice">
+                Starting price
+            </label>
+
+            <input
+                id="sellerPrice"
+                type="number"
+                min="1"
+                placeholder="Example: 199"
+            >
+
+            <label for="sellerDescription">
+                Service description
+            </label>
+
+            <textarea
+                id="sellerDescription"
+                rows="5"
+                placeholder="Describe your service..."
+            ></textarea>
+
+            <button
+                id="submitSeller"
+                class="btn btn-primary full-btn"
+                type="button"
+            >
+                Submit Service
+            </button>
+
+        </div>
 
     </div>
 
-</div>
 
+    <!-- ================= JAVASCRIPT ================= -->
 
-<!-- SELLER -->
+    <!-- IMPORTANT:
+         market.js is in the ROOT of GillMarket repository.
+    -->
 
-<div class="modal" id="sellerModal">
-
-    <div class="modal-box">
-
-        <button
-            class="close-btn"
-            data-close="sellerModal"
-            type="button">
-            ×
-        </button>
-
-        <h2>Sell Your Service</h2>
-
-        <p>
-            Create your service listing.
-        </p>
-
-        <input
-            id="sellerName"
-            type="text"
-            placeholder="Your name">
-
-        <input
-            id="sellerService"
-            type="text"
-            placeholder="Service name">
-
-        <input
-            id="sellerPrice"
-            type="number"
-            min="1"
-            placeholder="Starting price ₹">
-
-        <textarea
-            id="sellerDescription"
-            rows="4"
-            placeholder="Describe your service...">
-        </textarea>
-
-        <button
-            class="primary-btn full-btn"
-            id="submitSeller"
-            type="button">
-            Submit Service
-        </button>
-
-    </div>
-
-</div>
-
-
-<script src="market.js"></script>
+    <script
+        src="market.js"
+        defer
+    ></script>
 
 </body>
 </html>
