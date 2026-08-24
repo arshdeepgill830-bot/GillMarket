@@ -14,10 +14,10 @@ const GILLMARKET_SUPABASE_URL =
     "https://sbdadnfeutymqoelaydo.supabase.co";
 
 const GILLMARKET_SUPABASE_KEY =
-    "YOUR_SUPABASE_PUBLISHABLE_KEY";
+    "YOUR_SUPABASE_PUBLISHABLE_KEY";sb_publishable_iMewXbi3FBgyRzCZBorsGg_ibGLrrAe
 
 const GILLMARKET_RAZORPAY_KEY_ID =
-    "YOUR_RAZORPAY_TEST_KEY_ID";
+    "YOUR_RAZORPAY_TEST_KEY_ID";rzp_live_6NEMkMwtW0VXWs
 
 const GILLMARKET_CREATE_ORDER_API =
     "/api/create-order";
