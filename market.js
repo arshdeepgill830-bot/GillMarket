@@ -15,7 +15,7 @@ const GILLMARKET_CONFIG = {
         "YOUR_SUPABASE_URL",
 
     SUPABASE_ANON_KEY:
-        "YOUR_SUPABASE_ANON_KEY",
+        "YOUR_SUPABASE_ANON_KEY",sb_publishable_iMewXbi3FBgyRzCZBorsGg_ibGLrrAe
 
     RAZORPAY_KEY_ID:
         "YOUR_RAZORPAY_TEST_KEY_ID",
