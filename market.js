@@ -1,780 +1,1447 @@
-/* =========================================================
-   GillMarket - market.js
-   Supabase-connected marketplace
-   PART 1/2
-   ========================================================= */
+"use strict";
 
-const SUPABASE_URL = "https://sbdadnfeutymqoelaydo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_iMewXbi3FBgyRzCZBorsGg_ibGLrrAe";
+/*
+=========================================================
+ GILL MARKET
+ Supabase Connected Market JS
+ Part 1 / 2
+=========================================================
+*/
 
+const SUPABASE_URL =
+    "https://sbdadnfeutymqoelaydo.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_iMewXbi3FBgyRzCZBorsGg_ibGLrrAe";
+
+const COMMISSION = 30;
+
+let selectedService = "";
+let selectedPrice = 0;
 let supabaseClient = null;
 
-/* ---------- Supabase ---------- */
-function initSupabase() {
-    if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
-        supabaseClient = window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_KEY
-        );
-        return true;
+
+/* =====================================================
+   BASIC HELPERS
+===================================================== */
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+function showMessage(message) {
+    alert(message);
+}
+
+function openModal(id) {
+    const modal = $(id);
+
+    if (modal) {
+        modal.classList.add("show");
     }
-
-    console.error("Supabase library load nahi hui.");
-    return false;
 }
 
-/* ---------- Helpers ---------- */
-function $(selector) {
-    return document.querySelector(selector);
-}
+function closeModal(id) {
+    const modal = $(id);
 
-function escapeHTML(value) {
-    if (value === null || value === undefined) return "";
-
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function money(value) {
-    const number = Number(value || 0);
-
-    return "₹" + number.toLocaleString("en-IN", {
-        maximumFractionDigits: 2
-    });
-}
-
-function createOrderId() {
-    const now = Date.now().toString(36).toUpperCase();
-    const random = Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
-
-    return `GM-${now}-${random}`;
-}
-
-function showMessage(message, type = "info") {
-    let box = $("#gm-message");
-
-    if (!box) {
-        box = document.createElement("div");
-        box.id = "gm-message";
-
-        box.style.position = "fixed";
-        box.style.left = "50%";
-        box.style.bottom = "25px";
-        box.style.transform = "translateX(-50%)";
-        box.style.zIndex = "99999";
-        box.style.padding = "13px 18px";
-        box.style.borderRadius = "12px";
-        box.style.fontSize = "14px";
-        box.style.fontWeight = "600";
-        box.style.maxWidth = "90%";
-        box.style.textAlign = "center";
-        box.style.boxShadow = "0 10px 30px rgba(0,0,0,.2)";
-
-        document.body.appendChild(box);
+    if (modal) {
+        modal.classList.remove("show");
     }
-
-    box.textContent = message;
-
-    if (type === "error") {
-        box.style.background = "#dc2626";
-        box.style.color = "#fff";
-    } else if (type === "success") {
-        box.style.background = "#16a34a";
-        box.style.color = "#fff";
-    } else {
-        box.style.background = "#111827";
-        box.style.color = "#fff";
-    }
-
-    clearTimeout(box._timer);
-
-    box._timer = setTimeout(() => {
-        box.remove();
-    }, 3500);
 }
 
-/* ---------- Services ---------- */
-const DEFAULT_SERVICES = [
-    {
-        name: "Thumbnail Design",
-        description: "Professional YouTube and social media thumbnails.",
-        price: 99,
-        icon: "🎨"
-    },
-    {
-        name: "Video Editing",
-        description: "Reels, Shorts and YouTube video editing.",
-        price: 199,
-        icon: "🎬"
-    },
-    {
-        name: "Social Media Design",
-        description: "Instagram posts, banners and social graphics.",
-        price: 149,
-        icon: "📱"
-    },
-    {
-        name: "Website Design",
-        description: "Modern websites for businesses and creators.",
-        price: 499,
-        icon: "💻"
-    },
-    {
-        name: "AI Image Design",
-        description: "AI posters, creative images and designs.",
-        price: 99,
-        icon: "🤖"
-    },
-    {
-        name: "Content Writing",
-        description: "Scripts, captions and social media content.",
-        price: 99,
-        icon: "✍️"
-    }
-];
-
-/* ---------- Load Services ---------- */
-async function loadServices() {
-    if (!supabaseClient) {
-        renderServices(DEFAULT_SERVICES);
-        return;
-    }
-
+function saveData(key, data) {
     try {
-        const { data, error } = await supabaseClient
-            .from("services")
-            .select("*")
-            .eq("active", true)
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            console.warn("Services table unavailable:", error.message);
-            renderServices(DEFAULT_SERVICES);
-            return;
-        }
-
-        if (!data || data.length === 0) {
-            renderServices(DEFAULT_SERVICES);
-            return;
-        }
-
-        renderServices(data);
-    } catch (error) {
-        console.error(error);
-        renderServices(DEFAULT_SERVICES);
-    }
-}
-
-/* ---------- Render Services ---------- */
-function renderServices(services) {
-    const possibleContainers = [
-        "#services",
-        "#service-list",
-        ".services-grid",
-        ".service-grid",
-        "#popular-services"
-    ];
-
-    let container = null;
-
-    for (const selector of possibleContainers) {
-        const found = $(selector);
-
-        if (found) {
-            container = found;
-            break;
-        }
-    }
-
-    if (!container) {
-        console.warn("Services container nahi mila.");
-        return;
-    }
-
-    container.innerHTML = "";
-
-    services.forEach((service) => {
-        const card = document.createElement("div");
-
-        card.className = "service-card";
-
-        const serviceName =
-            service.name ||
-            service.service_name ||
-            "Service";
-
-        const description =
-            service.description ||
-            "Professional digital service.";
-
-        const price =
-            service.price ??
-            service.starting_price ??
-            0;
-
-        const icon =
-            service.icon ||
-            "✨";
-
-        card.innerHTML = `
-            <div class="service-icon">
-                ${escapeHTML(icon)}
-            </div>
-
-            <h3>
-                ${escapeHTML(serviceName)}
-            </h3>
-
-            <p>
-                ${escapeHTML(description)}
-            </p>
-
-            <strong>
-                From ${money(price)}
-            </strong>
-
-            <button
-                type="button"
-                class="order-service-btn"
-                data-service="${escapeHTML(serviceName)}"
-                data-price="${Number(price)}"
-            >
-                Order
-            </button>
-        `;
-
-        container.appendChild(card);
-    });
-
-    container.querySelectorAll(".order-service-btn")
-        .forEach((button) => {
-            button.addEventListener("click", () => {
-                openOrderForm(
-                    button.dataset.service,
-                    Number(button.dataset.price)
-                );
-            });
-        });
-}
-
-/* ---------- Order Modal ---------- */
-function createOrderModal() {
-    if ($("#gm-order-modal")) return;
-
-    const modal = document.createElement("div");
-
-    modal.id = "gm-order-modal";
-
-    modal.innerHTML = `
-        <div class="gm-modal-backdrop"></div>
-
-        <div class="gm-modal">
-            <button
-                type="button"
-                id="gm-close-modal"
-                class="gm-close"
-                aria-label="Close"
-            >
-                ×
-            </button>
-
-            <h2>Place Your Order</h2>
-
-            <form id="gm-order-form">
-
-                <label>
-                    Service
-                </label>
-
-                <input
-                    id="gm-service"
-                    type="text"
-                    readonly
-                >
-
-                <label>
-                    Your Name
-                </label>
-
-                <input
-                    id="gm-customer-name"
-                    type="text"
-                    placeholder="Enter your name"
-                    required
-                >
-
-                <label>
-                    Mobile Number
-                </label>
-
-                <input
-                    id="gm-customer-phone"
-                    type="tel"
-                    placeholder="Enter mobile number"
-                    maxlength="10"
-                    required
-                >
-
-                <label>
-                    What do you need?
-                </label>
-
-                <textarea
-                    id="gm-order-description"
-                    rows="4"
-                    placeholder="Tell the seller what you need..."
-                    required
-                ></textarea>
-
-                <label>
-                    Budget / Price
-                </label>
-
-                <input
-                    id="gm-order-price"
-                    type="number"
-                    min="1"
-                    step="1"
-                    required
-                >
-
-                <button
-                    id="gm-submit-order"
-                    type="submit"
-                >
-                    Place Order
-                </button>
-
-            </form>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    $("#gm-close-modal").addEventListener(
-        "click",
-        closeOrderForm
-    );
-
-    $(".gm-modal-backdrop").addEventListener(
-        "click",
-        closeOrderForm
-    );
-
-    $("#gm-order-form").addEventListener(
-        "submit",
-        submitOrder
-    );
-}
-
-/* ---------- Open Order ---------- */
-function openOrderForm(serviceName, price) {
-    createOrderModal();
-
-    $("#gm-service").value = serviceName;
-    $("#gm-order-price").value = price;
-
-    $("#gm-order-modal").classList.add("active");
-
-    document.body.style.overflow = "hidden";
-}
-
-/* ---------- Close Order ---------- */
-function closeOrderForm() {
-    const modal = $("#gm-order-modal");
-
-    if (!modal) return;
-
-    modal.classList.remove("active");
-
-    document.body.style.overflow = "";
-}
-
-/* ---------- Validate Phone ---------- */
-function validPhone(phone) {
-    return /^[6-9][0-9]{9}$/.test(phone);
-}
-
-/* ---------- Submit Order ---------- */
-async function submitOrder(event) {
-    event.preventDefault();
-
-    const button = $("#gm-submit-order");
-
-    const serviceName =
-        $("#gm-service").value.trim();
-
-    const customerName =
-        $("#gm-customer-name").value.trim();
-
-    const customerPhone =
-        $("#gm-customer-phone").value.trim();
-
-    const description =
-        $("#gm-order-description").value.trim();
-
-    const price =
-        Number($("#gm-order-price").value);
-
-    if (!customerName) {
-        showMessage(
-            "Apna naam enter karein.",
-            "error"
+        localStorage.setItem(
+            key,
+            JSON.stringify(data)
         );
-        return;
-    }
-
-    if (!validPhone(customerPhone)) {
-        showMessage(
-            "Valid 10-digit mobile number enter karein.",
-            "error"
-        );
-        return;
-    }
-
-    if (!description) {
-        showMessage(
-            "Apne order ki details likhein.",
-            "error"
-        );
-        return;
-    }
-
-    if (!price || price <= 0) {
-        showMessage(
-            "Valid price enter karein.",
-            "error"
-        );
-        return;
-    }
-
-    const orderId = createOrderId();
-
-    button.disabled = true;
-    button.textContent = "Placing Order...";
-
-    try {
-        if (!supabaseClient) {
-            throw new Error(
-                "Supabase connection available nahi hai."
-            );
-        }
-
-        const orderData = {
-            order_id: orderId,
-            service_name: serviceName,
-            customer_name: customerName,
-            customer_phone: customerPhone,
-            description: description,
-            price: price,
-            commission_percent: 30
-        };
-
-        const { data, error } = await supabaseClient
-            .from("orders")
-            .insert([orderData])
-            .select()
-            .single();
-
-        if (error) {
-            console.error(error);
-            throw error;
-        }
-
-        closeOrderForm();
-
-        showMessage(
-            `Order ${orderId} successfully place ho gaya!`,
-            "success"
-        );
-
-        $("#gm-order-form").reset();
-
-        if (data) {
-            console.log(
-                "GillMarket Order:",
-                data
-            );
-        }
-
     } catch (error) {
         console.error(
-            "Order error:",
+            "LocalStorage save error:",
+            error
+        );
+    }
+}
+
+function getData(key) {
+    try {
+        return JSON.parse(
+            localStorage.getItem(key) || "[]"
+        );
+    } catch (error) {
+        return [];
+    }
+}
+
+
+/* =====================================================
+   SUPABASE LOAD
+===================================================== */
+
+function loadSupabaseLibrary() {
+    return new Promise((resolve, reject) => {
+
+        if (
+            window.supabase &&
+            typeof window.supabase.createClient ===
+                "function"
+        ) {
+            resolve();
+            return;
+        }
+
+        const oldScript =
+            document.querySelector(
+                'script[data-gillmarket-supabase="true"]'
+            );
+
+        if (oldScript) {
+
+            oldScript.addEventListener(
+                "load",
+                () => resolve()
+            );
+
+            oldScript.addEventListener(
+                "error",
+                () =>
+                    reject(
+                        new Error(
+                            "Supabase library failed."
+                        )
+                    )
+            );
+
+            return;
+        }
+
+        const script =
+            document.createElement("script");
+
+        script.src =
+            "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+        script.async = true;
+
+        script.dataset.gillmarketSupabase =
+            "true";
+
+        script.onload = () => {
+            if (
+                window.supabase &&
+                typeof window.supabase.createClient ===
+                    "function"
+            ) {
+                resolve();
+            } else {
+                reject(
+                    new Error(
+                        "Supabase library loaded but client is unavailable."
+                    )
+                );
+            }
+        };
+
+        script.onerror = () => {
+            reject(
+                new Error(
+                    "Could not load Supabase library."
+                )
+            );
+        };
+
+        document.head.appendChild(script);
+    });
+}
+
+
+/* =====================================================
+   INITIALIZE SUPABASE
+===================================================== */
+
+async function initSupabase() {
+
+    try {
+
+        await loadSupabaseLibrary();
+
+        supabaseClient =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY
+            );
+
+        console.log(
+            "GillMarket: Supabase connected."
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "Supabase connection error:",
             error
         );
 
-        showMessage(
-            error.message ||
-            "Order place nahi ho saka.",
-            "error"
-        );
-    } finally {
-        button.disabled = false;
-        button.textContent = "Place Order";
+        supabaseClient = null;
+
+        return false;
     }
 }
 
-/* ---------- Seller Modal ---------- */
-function createSellerModal() {
-    if ($("#gm-seller-modal")) return;
 
-    const modal = document.createElement("div");
+/* =====================================================
+   MOBILE MENU
+===================================================== */
 
-    modal.id = "gm-seller-modal";
+function setupMobileMenu() {
 
-    modal.innerHTML = `
-        <div class="gm-modal-backdrop"></div>
+    const menuBtn = $("menuBtn");
+    const nav = $("nav");
 
-        <div class="gm-modal">
+    if (!menuBtn || !nav) {
+        return;
+    }
 
-            <button
-                type="button"
-                id="gm-close-seller"
-                class="gm-close"
-            >
-                ×
-            </button>
-
-            <h2>Sell Your Service</h2>
-
-            <form id="gm-seller-form">
-
-                <label>
-                    Your Name
-                </label>
-
-                <input
-                    id="gm-seller-name"
-                    type="text"
-                    placeholder="Your name"
-                    required
-                >
-
-                <label>
-                    Mobile Number
-                </label>
-
-                <input
-                    id="gm-seller-phone"
-                    type="tel"
-                    maxlength="10"
-                    placeholder="10-digit mobile"
-                    required
-                >
-
-                <label>
-                    Service Name
-                </label>
-
-                <input
-                    id="gm-seller-service"
-                    type="text"
-                    placeholder="e.g. Logo Design"
-                    required
-                >
-
-                <label>
-                    Description
-                </label>
-
-                <textarea
-                    id="gm-seller-description"
-                    rows="4"
-                    placeholder="Describe your service..."
-                    required
-                ></textarea>
-
-                <label>
-                    Starting Price
-                </label>
-
-                <input
-                    id="gm-seller-price"
-                    type="number"
-                    min="1"
-                    step="1"
-                    placeholder="₹99"
-                    required
-                >
-
-                <button
-                    type="submit"
-                    id="gm-submit-seller"
-                >
-                    Submit Service
-                </button>
-
-            </form>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    $("#gm-close-seller").addEventListener(
+    menuBtn.addEventListener(
         "click",
-        closeSellerForm
-    );
+        function () {
 
-    document.querySelector(
-        "#gm-seller-modal .gm-modal-backdrop"
-    ).addEventListener(
-        "click",
-        closeSellerForm
-    );
+            nav.classList.toggle("open");
 
-    $("#gm-seller-form").addEventListener(
-        "submit",
-        submitSeller
-    );
-}
-
-/* ---------- Open Seller ---------- */
-function openSellerForm() {
-    createSellerModal();
-
-    $("#gm-seller-modal")
-        .classList
-        .add("active");
-
-    document.body.style.overflow = "hidden";
-}
-
-/* ---------- Close Seller ---------- */
-function closeSellerForm() {
-    const modal = $("#gm-seller-modal");
-
-    if (!modal) return;
-
-    modal.classList.remove("active");
-
-    document.body.style.overflow = "";
-}
-
-/* ---------- Submit Seller ---------- */
-async function submitSeller(event) {
-    event.preventDefault();
-
-    const button = $("#gm-submit-seller");
-
-    const name =
-        $("#gm-seller-name").value.trim();
-
-    const phone =
-        $("#gm-seller-phone").value.trim();
-
-    const service =
-        $("#gm-seller-service").value.trim();
-
-    const description =
-        $("#gm-seller-description").value.trim();
-
-    const price =
-        Number($("#gm-seller-price").value);
-
-    if (!name) {
-        showMessage(
-            "Name enter karein.",
-            "error"
-        );
-        return;
-    }
-
-    if (!validPhone(phone)) {
-        showMessage(
-            "Valid mobile number enter karein.",
-            "error"
-        );
-        return;
-    }
-
-    if (!service || !description) {
-        showMessage(
-            "Service details complete karein.",
-            "error"
-        );
-        return;
-    }
-
-    if (!price || price <= 0) {
-        showMessage(
-            "Valid starting price enter karein.",
-            "error"
-        );
-        return;
-    }
-
-    button.disabled = true;
-    button.textContent = "Submitting...";
-
-    try {
-        const { error } = await supabaseClient
-            .from("services")
-            .insert([{
-                name: service,
-                description: description,
-                price: price,
-                active: true
-            }]);
-
-        if (error) {
-            throw error;
         }
+    );
 
-        closeSellerForm();
+    nav
+        .querySelectorAll("a")
+        .forEach(function (link) {
 
-        showMessage(
-            "Service successfully submit ho gayi!",
-            "success"
+            link.addEventListener(
+                "click",
+                function () {
+
+                    nav.classList.remove(
+                        "open"
+                    );
+
+                }
+            );
+
+        });
+}
+
+
+/* =====================================================
+   FIND SERVICE
+===================================================== */
+
+function setupFindService() {
+
+    const findBtn = $("findBtn");
+
+    if (!findBtn) {
+        return;
+    }
+
+    findBtn.addEventListener(
+        "click",
+        function () {
+
+            const services =
+                $("services");
+
+            if (services) {
+
+                services.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+
+            }
+
+        }
+    );
+}
+
+
+/* =====================================================
+   LOGIN
+===================================================== */
+
+function setupLogin() {
+
+    const loginBtn = $("loginBtn");
+    const continueBtn = $("continueBtn");
+
+    if (loginBtn) {
+
+        loginBtn.addEventListener(
+            "click",
+            function () {
+
+                const savedName =
+                    localStorage.getItem(
+                        "gillMarketName"
+                    ) || "";
+
+                const savedEmail =
+                    localStorage.getItem(
+                        "gillMarketEmail"
+                    ) || "";
+
+                if ($("loginName")) {
+                    $("loginName").value =
+                        savedName;
+                }
+
+                if ($("loginEmail")) {
+                    $("loginEmail").value =
+                        savedEmail;
+                }
+
+                openModal(
+                    "loginModal"
+                );
+
+            }
         );
 
-        $("#gm-seller-form").reset();
+    }
 
-        await loadServices();
 
-    } catch (error) {
-        console.error(error);
+    if (continueBtn) {
 
-        showMessage(
-            error.message ||
-            "Service submit nahi ho saki.",
-            "error"
+        continueBtn.addEventListener(
+            "click",
+            function () {
+
+                const name =
+                    $("loginName")
+                        ?.value
+                        .trim() || "";
+
+                const email =
+                    $("loginEmail")
+                        ?.value
+                        .trim() || "";
+
+
+                if (!name) {
+
+                    showMessage(
+                        "Please enter your name."
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !email ||
+                    !email.includes("@")
+                ) {
+
+                    showMessage(
+                        "Please enter a valid email."
+                    );
+
+                    return;
+                }
+
+
+                localStorage.setItem(
+                    "gillMarketName",
+                    name
+                );
+
+                localStorage.setItem(
+                    "gillMarketEmail",
+                    email
+                );
+
+
+                showMessage(
+                    "Welcome to GillMarket, " +
+                    name +
+                    "! 🎉"
+                );
+
+
+                closeModal(
+                    "loginModal"
+                );
+
+            }
         );
-    } finally {
-        button.disabled = false;
-        button.textContent = "Submit Service";
+
     }
 }
-/* =========================================================
-   GillMarket - market.js
-   PART 2/2
-   ========================================================= */
 
-/* ---------- Payment / Order Summary ---------- */
 
-function openPaymentInfo(orderId, amount) {
-    const existing = document.getElementById("gm-payment-modal");
+/* =====================================================
+   SELLER MODAL
+===================================================== */
 
-    if (existing) existing.remove();
+function openSellerModal() {
+    openModal("sellerModal");
+}
 
-    const modal = document.createElement("div");
 
-    modal.id = "gm-payment-modal";
+function setupSellerButtons() {
+
+    const sellBtn =
+        $("sellBtn");
+
+    const sellHeroBtn =
+        $("sellHeroBtn");
+
+
+    if (sellBtn) {
+
+        sellBtn.addEventListener(
+            "click",
+            openSellerModal
+        );
+
+    }
+
+
+    if (sellHeroBtn) {
+
+        sellHeroBtn.addEventListener(
+            "click",
+            openSellerModal
+        );
+
+    }
+}
+
+
+/* =====================================================
+   MODAL CLOSE BUTTONS
+===================================================== */
+
+function setupModalClosing() {
+
+    document
+        .querySelectorAll(
+            "[data-close]"
+        )
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const modalId =
+                        button.getAttribute(
+                            "data-close"
+                        );
+
+                    closeModal(
+                        modalId
+                    );
+
+                }
+            );
+
+        });
+
+
+    document
+        .querySelectorAll(
+            ".modal"
+        )
+        .forEach(function (modal) {
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target ===
+                        modal
+                    ) {
+
+                        modal.classList.remove(
+                            "show"
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key ===
+                "Escape"
+            ) {
+
+                document
+                    .querySelectorAll(
+                        ".modal.show"
+                    )
+                    .forEach(
+                        function (modal) {
+
+                            modal.classList.remove(
+                                "show"
+                            );
+
+                        }
+                    );
+
+            }
+
+        }
+    );
+}
+
+
+/* =====================================================
+   ORDER BUTTONS
+===================================================== */
+
+function setupOrderButtons() {
+
+    document
+        .querySelectorAll(
+            ".order-btn"
+        )
+        .forEach(function (button) {
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    selectedService =
+                        button.dataset.name ||
+                        "";
+
+                    selectedPrice =
+                        Number(
+                            button.dataset.price ||
+                            0
+                        );
+
+
+                    if (
+                        !selectedService ||
+                        selectedPrice <= 0
+                    ) {
+
+                        showMessage(
+                            "This service is currently unavailable."
+                        );
+
+                        return;
+                    }
+
+
+                    const commissionAmount =
+                        Number(
+                            (
+                                selectedPrice *
+                                COMMISSION /
+                                100
+                            ).toFixed(2)
+                        );
+
+
+                    const sellerAmount =
+                        Number(
+                            (
+                                selectedPrice -
+                                commissionAmount
+                            ).toFixed(2)
+                        );
+
+
+                    const summary =
+                        $("summary");
+
+
+                    if (summary) {
+
+                        summary.innerHTML =
+                            "<strong>" +
+                            escapeHTML(
+                                selectedService
+                            ) +
+                            "</strong><br><br>" +
+
+                            "Order Price: ₹" +
+                            selectedPrice.toFixed(
+                                2
+                            ) +
+
+                            "<br>GillMarket 30%: ₹" +
+                            commissionAmount.toFixed(
+                                2
+                            ) +
+
+                            "<br>Seller 70%: ₹" +
+                            sellerAmount.toFixed(
+                                2
+                            );
+
+                    }
+
+
+                    const savedName =
+                        localStorage.getItem(
+                            "gillMarketName"
+                        ) || "";
+
+
+                    const savedEmail =
+                        localStorage.getItem(
+                            "gillMarketEmail"
+                        ) || "";
+
+
+                    if ($("customerName")) {
+
+                        $("customerName").value =
+                            savedName;
+
+                    }
+
+
+                    if ($("customerEmail")) {
+
+                        $("customerEmail").value =
+                            savedEmail;
+
+                    }
+
+
+                    openModal(
+                        "orderModal"
+                    );
+
+                }
+            );
+
+        });
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+/* =====================================================
+   CREATE ORDER OBJECT
+===================================================== */
+
+function createOrderObject(
+    orderId,
+    customerName,
+    customerEmail,
+    details
+) {
+
+    const commissionAmount =
+        Number(
+            (
+                selectedPrice *
+                COMMISSION /
+                100
+            ).toFixed(2)
+        );
+
+
+    const sellerAmount =
+        Number(
+            (
+                selectedPrice -
+                commissionAmount
+            ).toFixed(2)
+        );
+
+
+    return {
+
+        order_id:
+            orderId,
+
+        service_name:
+            selectedService,
+
+        customer_name:
+            customerName,
+
+        customer_email:
+            customerEmail,
+
+        details:
+            details,
+
+        price:
+            selectedPrice,
+
+        commission_percent:
+            COMMISSION,
+
+        commission_amount:
+            commissionAmount,
+
+        seller_amount:
+            sellerAmount,
+
+        status:
+            "pending",
+
+        created_at:
+            new Date().toISOString()
+
+    };
+}
+
+
+/* =====================================================
+   SAVE ORDER TO SUPABASE
+===================================================== */
+
+async function saveOrderToSupabase(order) {
+
+    if (!supabaseClient) {
+
+        throw new Error(
+            "Supabase is not connected."
+        );
+
+    }
+
+
+    const result =
+        await supabaseClient
+            .from("orders")
+            .insert([order])
+            .select();
+
+
+    if (result.error) {
+
+        console.error(
+            "Supabase order error:",
+            result.error
+        );
+
+        throw result.error;
+    }
+
+
+    return result.data;
+}
+
+
+/* =====================================================
+   LOCAL BACKUP
+===================================================== */
+
+function saveOrderLocally(order) {
+
+    const orders =
+        getData(
+            "gillMarketOrders"
+        );
+
+
+    orders.push({
+
+        ...order,
+
+        id:
+            order.order_id
+
+    });
+
+
+    saveData(
+        "gillMarketOrders",
+        orders
+    );
+}
+
+
+/* =====================================================
+   RESET ORDER FORM
+===================================================== */
+
+function resetOrderForm() {
+
+    if ($("customerName")) {
+        $("customerName").value = "";
+    }
+
+    if ($("customerEmail")) {
+        $("customerEmail").value = "";
+    }
+
+    if ($("details")) {
+        $("details").value = "";
+    }
+
+    selectedService = "";
+
+    selectedPrice = 0;
+}
+
+
+/* =====================================================
+   ORDER SUCCESS
+===================================================== */
+
+function showOrderSuccess(
+    orderId,
+    service,
+    price,
+    commissionAmount,
+    sellerAmount
+) {
+
+    showMessage(
+        "Order submitted successfully! 🎉" +
+
+        "\n\nOrder ID: " +
+        orderId +
+
+        "\nService: " +
+        service +
+
+        "\nPrice: ₹" +
+        Number(price).toFixed(2) +
+
+        "\nGillMarket 30%: ₹" +
+        Number(
+            commissionAmount
+        ).toFixed(2) +
+
+        "\nSeller 70%: ₹" +
+        Number(
+            sellerAmount
+        ).toFixed(2)
+    );
+}
+
+
+/* =====================================================
+   END OF PART 1
+===================================================== */
+/* =====================================================
+   GILL MARKET
+   Part 2 / 2
+===================================================== */
+
+
+/* =====================================================
+   SUBMIT ORDER
+===================================================== */
+
+function setupOrderSubmit() {
+
+    const submitOrder =
+        $("submitOrder");
+
+
+    if (!submitOrder) {
+
+        console.warn(
+            "submitOrder button not found."
+        );
+
+        return;
+    }
+
+
+    submitOrder.addEventListener(
+        "click",
+        async function () {
+
+            const customerName =
+                $("customerName")
+                    ?.value
+                    .trim() || "";
+
+
+            const customerEmail =
+                $("customerEmail")
+                    ?.value
+                    .trim() || "";
+
+
+            const details =
+                $("details")
+                    ?.value
+                    .trim() || "";
+
+
+            /* ---------- Validation ---------- */
+
+            if (!customerName) {
+
+                showMessage(
+                    "Please enter your name."
+                );
+
+                return;
+            }
+
+
+            if (
+                !customerEmail ||
+                !customerEmail.includes("@")
+            ) {
+
+                showMessage(
+                    "Please enter a valid email."
+                );
+
+                return;
+            }
+
+
+            if (!details) {
+
+                showMessage(
+                    "Please describe what you need."
+                );
+
+                return;
+            }
+
+
+            if (
+                !selectedService ||
+                selectedPrice <= 0
+            ) {
+
+                showMessage(
+                    "Please select a service first."
+                );
+
+                return;
+            }
+
+
+            /* ---------- Prevent Double Click ---------- */
+
+            if (submitOrder.disabled) {
+                return;
+            }
+
+
+            submitOrder.disabled = true;
+
+            const oldText =
+                submitOrder.textContent;
+
+
+            submitOrder.textContent =
+                "Submitting...";
+
+
+            try {
+
+                const commissionAmount =
+                    Number(
+                        (
+                            selectedPrice *
+                            COMMISSION /
+                            100
+                        ).toFixed(2)
+                    );
+
+
+                const sellerAmount =
+                    Number(
+                        (
+                            selectedPrice -
+                            commissionAmount
+                        ).toFixed(2)
+                    );
+
+
+                const orderId =
+                    "GM-" +
+                    Date.now();
+
+
+                const order =
+                    createOrderObject(
+                        orderId,
+                        customerName,
+                        customerEmail,
+                        details
+                    );
+
+
+                /*
+                -------------------------------------------------
+                IMPORTANT
+
+                First try Supabase.
+
+                If Supabase fails, DO NOT show fake success.
+                The user will see the real error.
+                -------------------------------------------------
+                */
+
+
+                await saveOrderToSupabase(
+                    order
+                );
+
+
+                /*
+                Supabase success.
+                Local backup is also saved.
+                */
+
+                saveOrderLocally(
+                    order
+                );
+
+
+                showOrderSuccess(
+                    orderId,
+                    selectedService,
+                    selectedPrice,
+                    commissionAmount,
+                    sellerAmount
+                );
+
+
+                closeModal(
+                    "orderModal"
+                );
+
+
+                resetOrderForm();
+
+
+            } catch (error) {
+
+                console.error(
+                    "ORDER SUBMISSION FAILED:",
+                    error
+                );
+
+
+                let message =
+                    "Order save nahi hua.";
+
+
+                if (
+                    error &&
+                    error.message
+                ) {
+
+                    message +=
+                        "\n\nSupabase error: " +
+                        error.message;
+
+                }
+
+
+                if (
+                    error &&
+                    error.code
+                ) {
+
+                    message +=
+                        "\nError code: " +
+                        error.code;
+
+                }
+
+
+                message +=
+                    "\n\nSupabase Dashboard → orders table check karein.";
+
+
+                showMessage(
+                    message
+                );
+
+
+            } finally {
+
+                submitOrder.disabled =
+                    false;
+
+                submitOrder.textContent =
+                    oldText;
+
+            }
+
+        }
+    );
+}
+
+
+/* =====================================================
+   SELLER SERVICE
+===================================================== */
+
+async function saveSellerServiceToSupabase(
+    service
+) {
+
+    if (!supabaseClient) {
+
+        throw new Error(
+            "Supabase is not connected."
+        );
+
+    }
+
+
+    const result =
+        await supabaseClient
+            .from("services")
+            .insert([service])
+            .select();
+
+
+    if (result.error) {
+
+        console.error(
+            "Supabase service error:",
+            result.error
+        );
+
+        throw result.error;
+    }
+
+
+    return result.data;
+}
+
+
+/* =====================================================
+   SELLER SERVICE SUBMIT
+===================================================== */
+
+function setupSellerSubmit() {
+
+    const submitSeller =
+        $("submitSeller");
+
+
+    if (!submitSeller) {
+        return;
+    }
+
+
+    submitSeller.addEventListener(
+        "click",
+        async function () {
+
+            const sellerName =
+                $("sellerName")
+                    ?.value
+                    .trim() || "";
+
+
+            const sellerService =
+                $("sellerService")
+                    ?.value
+                    .trim() || "";
+
+
+            const sellerPrice =
+                Number(
+                    $("sellerPrice")
+                        ?.value || 0
+                );
+
+
+            const sellerDescription =
+                $("sellerDescription")
+                    ?.value
+                    .trim() || "";
+
+
+            if (!sellerName) {
+
+                showMessage(
+                    "Please enter your name."
+                );
+
+                return;
+            }
+
+
+            if (!sellerService) {
+
+                showMessage(
+                    "Please enter your service name."
+                );
+
+                return;
+            }
+
+
+            if (
+                !sellerPrice ||
+                sellerPrice <= 0
+            ) {
+
+                showMessage(
+                    "Please enter a valid price."
+                );
+
+                return;
+            }
+
+
+            if (!sellerDescription) {
+
+                showMessage(
+                    "Please describe your service."
+                );
+
+                return;
+            }
+
+
+            if (submitSeller.disabled) {
+                return;
+            }
+
+
+            submitSeller.disabled =
+                true;
+
+
+            const oldText =
+                submitSeller.textContent;
+
+
+            submitSeller.textContent =
+                "Submitting...";
+
+
+            try {
+
+                const sellerAmount =
+                    Number(
+                        (
+                            sellerPrice -
+                            (
+                                sellerPrice *
+                                COMMISSION /
+                                100
+                            )
+                        ).toFixed(2)
+                    );
+
+
+                /*
+                -------------------------------------------------
+                Seller table data
+
+                This will work if public.services table
+                exists with matching columns.
+                -------------------------------------------------
+                */
+
+                const service = {
+
+                    service_id:
+                        "SERVICE-" +
+                        Date.now(),
+
+                    seller_name:
+                        sellerName,
+
+                    service_name:
+                        sellerService,
+
+                    price:
+                        sellerPrice,
+
+                    description:
+                        sellerDescription,
+
+                    commission_percent:
+                        COMMISSION,
+
+                    seller_amount:
+                        sellerAmount,
+
+                    status:
+                        "pending",
+
+                    created_at:
+                        new Date().toISOString()
+
+                };
+
+
+                try {
+
+                    await saveSellerServiceToSupabase(
+                        service
+                    );
+
+                } catch (serviceError) {
+
+                    /*
+                    Seller table may not exist yet.
+                    Keep seller submission locally so the
+                    website itself doesn't break.
+                    */
+
+                    console.warn(
+                        "Supabase services table unavailable:",
+                        serviceError
+                    );
+
+                    saveData(
+                        "gillMarketServices",
+                        [
+                            ...getData(
+                                "gillMarketServices"
+                            ),
+                            service
+                        ]
+                    );
+
+                }
+
+
+                showMessage(
+                    "Your service was submitted successfully! 🎉" +
+
+                    "\n\nService: " +
+                    sellerService +
+
+                    "\nPrice: ₹" +
+                    sellerPrice +
+
+                    "\nGillMarket commission: " +
+                    COMMISSION +
+                    "%"
+                );
+
+
+                closeModal(
+                    "sellerModal"
+                );
+
+
+                if ($("sellerName")) {
+                    $("sellerName").value = "";
+                }
+
+                if ($("sellerService")) {
+                    $("sellerService").value = "";
+                }
+
+                if ($("sellerPrice")) {
+                    $("sellerPrice").value = "";
+                }
+
+                if ($("sellerDescription")) {
+                    $("sellerDescription").value = "";
+                }
+
+
+            } finally {
+
+                submitSeller.disabled =
+                    false;
+
+                submitSeller.textContent =
+                    oldText;
+
+            }
+
+        }
+    );
+}
+
+
+/* =====================================================
+   PAYMENT INFO
+===================================================== */
+
+function openPaymentInfo(
+    orderId,
+    amount
+) {
+
+    const existing =
+        $("gm-payment-modal");
+
+
+    if (existing) {
+        existing.remove();
+    }
+
+
+    const modal =
+        document.createElement(
+            "div"
+        );
+
+
+    modal.id =
+        "gm-payment-modal";
+
+
+    modal.className =
+        "gm-payment-wrapper";
+
 
     modal.innerHTML = `
-        <div class="gm-modal-backdrop"></div>
 
-        <div class="gm-modal">
+        <div class="gm-payment-backdrop"></div>
+
+        <div class="gm-payment-box">
+
             <button
                 type="button"
-                class="gm-close"
-                id="gm-payment-close"
+                class="gm-payment-close"
+                aria-label="Close"
             >
                 ×
             </button>
@@ -783,401 +1450,449 @@ function openPaymentInfo(orderId, amount) {
 
             <p>
                 Order ID:
-                <strong>${escapeHTML(orderId)}</strong>
+                <strong>
+                    ${escapeHTML(orderId)}
+                </strong>
             </p>
 
             <p>
                 Amount:
-                <strong>${money(amount)}</strong>
+                <strong>
+                    ₹${Number(amount).toFixed(2)}
+                </strong>
             </p>
 
-            <div class="payment-info">
-                <p>
-                    Payment gateway connect karne ke baad
-                    customer yahin se online payment kar sakega.
-                </p>
+            <div class="gm-payment-note">
+
+                <strong>
+                    Payment gateway not connected yet.
+                </strong>
 
                 <p>
-                    Abhi payment ko manually verify karein.
+                    Abhi ye order/payment testing
+                    ke liye hai. Real UPI payment
+                    ke liye payment gateway alag se
+                    connect karna hoga.
                 </p>
+
             </div>
 
             <button
                 type="button"
-                id="gm-payment-done"
+                class="gm-payment-done"
             >
-                Payment Done
+                Close
             </button>
+
         </div>
     `;
 
-    document.body.appendChild(modal);
 
-    modal.classList.add("active");
-
-    document.body.style.overflow = "hidden";
-
-    document
-        .getElementById("gm-payment-close")
-        .addEventListener("click", () => {
-            modal.remove();
-            document.body.style.overflow = "";
-        });
-
-    document
-        .getElementById("gm-payment-done")
-        .addEventListener("click", () => {
-            showMessage(
-                "Payment verification ke liye order details save hain.",
-                "success"
-            );
-
-            modal.remove();
-            document.body.style.overflow = "";
-        });
-}
-
-
-/* ---------- Find Service Button ---------- */
-
-function setupFindServiceButton() {
-    const buttons = document.querySelectorAll(
-        "button, a"
+    document.body.appendChild(
+        modal
     );
 
-    buttons.forEach((button) => {
-        const text =
-            button.textContent
-                .trim()
-                .toLowerCase();
 
-        if (
-            text === "find a service" ||
-            text.includes("find a service")
-        ) {
-            button.addEventListener("click", (event) => {
-                event.preventDefault();
-
-                const target =
-                    document.querySelector(
-                        "#services, #service-list, .services-grid, .service-grid"
-                    );
-
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-                }
-            });
-        }
-    });
-}
-
-
-/* ---------- Sell Your Service Button ---------- */
-
-function setupSellerButton() {
-    const buttons = document.querySelectorAll(
-        "button, a"
-    );
-
-    buttons.forEach((button) => {
-        const text =
-            button.textContent
-                .trim()
-                .toLowerCase();
-
-        if (
-            text === "sell your service" ||
-            text === "start selling" ||
-            text.includes("sell your service")
-        ) {
-            button.addEventListener("click", (event) => {
-                event.preventDefault();
-                openSellerForm();
-            });
-        }
-    });
-}
-
-
-/* ---------- Mobile Menu ---------- */
-
-function setupMobileMenu() {
-    const menuButton =
-        document.querySelector(
-            "#menu-button, .menu-button, .hamburger, .menu-toggle"
+    const close =
+        modal.querySelector(
+            ".gm-payment-close"
         );
 
-    const nav =
-        document.querySelector(
-            "#mobile-menu, .mobile-menu, nav"
+
+    const done =
+        modal.querySelector(
+            ".gm-payment-done"
         );
 
-    if (!menuButton || !nav) {
-        return;
+
+    function removePaymentModal() {
+
+        modal.remove();
+
+        document.body.style.overflow =
+            "";
+
     }
 
-    menuButton.addEventListener("click", () => {
-        nav.classList.toggle("open");
 
-        menuButton.classList.toggle("active");
-    });
+    close.addEventListener(
+        "click",
+        removePaymentModal
+    );
+
+
+    done.addEventListener(
+        "click",
+        removePaymentModal
+    );
+
+
+    modal
+        .querySelector(
+            ".gm-payment-backdrop"
+        )
+        .addEventListener(
+            "click",
+            removePaymentModal
+        );
+
+
+    document.body.style.overflow =
+        "hidden";
 }
 
 
-/* ---------- Search ---------- */
+/* =====================================================
+   SEARCH SERVICES
+===================================================== */
 
 function setupSearch() {
-    const searchInput =
+
+    const search =
         document.querySelector(
-            "#search-service, #service-search, input[type='search']"
+            "#searchInput, #serviceSearch, input[type='search']"
         );
 
-    if (!searchInput) {
+
+    if (!search) {
         return;
     }
 
-    searchInput.addEventListener("input", () => {
-        const query =
-            searchInput.value
-                .trim()
-                .toLowerCase();
 
-        const cards =
-            document.querySelectorAll(
-                ".service-card"
-            );
+    search.addEventListener(
+        "input",
+        function () {
 
-        cards.forEach((card) => {
-            const text =
-                card.textContent
+            const query =
+                search.value
+                    .trim()
                     .toLowerCase();
 
-            if (!query || text.includes(query)) {
-                card.style.display = "";
-            } else {
-                card.style.display = "none";
-            }
-        });
-    });
+
+            document
+                .querySelectorAll(
+                    ".service-card"
+                )
+                .forEach(
+                    function (card) {
+
+                        const text =
+                            card.textContent
+                                .toLowerCase();
+
+
+                        card.style.display =
+                            !query ||
+                            text.includes(
+                                query
+                            )
+                                ? ""
+                                : "none";
+
+                    }
+                );
+
+        }
+    );
 }
 
 
-/* ---------- Add Basic Modal CSS ---------- */
+/* =====================================================
+   ADD SMALL PAYMENT CSS
+===================================================== */
 
-function addModalStyles() {
+function addPaymentStyles() {
+
     if (
-        document.getElementById(
-            "gillmarket-modal-styles"
-        )
+        $("gillmarket-payment-styles")
     ) {
         return;
     }
 
+
     const style =
-        document.createElement("style");
+        document.createElement(
+            "style"
+        );
+
 
     style.id =
-        "gillmarket-modal-styles";
+        "gillmarket-payment-styles";
+
 
     style.textContent = `
-        .gm-modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.65);
-            z-index: 9998;
-        }
 
-        #gm-order-modal,
-        #gm-seller-modal,
-        #gm-payment-modal {
-            display: none;
+        .gm-payment-wrapper {
             position: fixed;
             inset: 0;
-            z-index: 9999;
+            z-index: 99999;
+            display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
-        #gm-order-modal.active,
-        #gm-seller-modal.active,
-        #gm-payment-modal.active {
-            display: flex;
+        .gm-payment-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.65);
         }
 
-        .gm-modal {
+        .gm-payment-box {
             position: relative;
-            width: min(500px, 100%);
-            max-height: 90vh;
-            overflow-y: auto;
+            z-index: 2;
+            width: min(480px, 100%);
             background: #ffffff;
             color: #111827;
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 25px 70px rgba(0,0,0,.35);
-            z-index: 10000;
-        }
-
-        .gm-modal h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        .gm-modal label {
-            display: block;
-            margin-top: 14px;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
-        .gm-modal input,
-        .gm-modal textarea {
-            width: 100%;
             box-sizing: border-box;
-            border: 1px solid #d1d5db;
-            border-radius: 10px;
-            padding: 12px;
-            font-size: 15px;
-            outline: none;
+            box-shadow:
+                0 25px 80px
+                rgba(0,0,0,.35);
         }
 
-        .gm-modal input:focus,
-        .gm-modal textarea:focus {
-            border-color: #2563eb;
+        .gm-payment-box h2 {
+            margin-top: 0;
         }
 
-        .gm-modal button[type="submit"],
-        #gm-payment-done {
-            width: 100%;
-            margin-top: 18px;
-            border: 0;
-            border-radius: 10px;
-            padding: 13px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            background: #2563eb;
-            color: #fff;
-        }
-
-        .gm-modal button:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
-
-        .gm-close {
+        .gm-payment-close {
             position: absolute;
-            right: 14px;
             top: 10px;
+            right: 12px;
             width: 36px;
             height: 36px;
             border: 0;
             border-radius: 50%;
             background: #f3f4f6;
-            color: #111827;
             font-size: 25px;
             cursor: pointer;
         }
 
-        .payment-info {
+        .gm-payment-note {
+            margin-top: 18px;
             padding: 15px;
-            margin-top: 15px;
             border-radius: 12px;
             background: #f3f4f6;
         }
 
-        .service-card {
-            transition:
-                transform .2s ease,
-                box-shadow .2s ease;
+        .gm-payment-done {
+            width: 100%;
+            margin-top: 18px;
+            border: 0;
+            border-radius: 10px;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
         }
 
-        .service-card:hover {
-            transform: translateY(-3px);
+        #submitOrder:disabled,
+        #submitSeller:disabled {
+            opacity: .6;
+            cursor: wait;
         }
 
-        nav.open {
-            display: block !important;
-        }
     `;
 
-    document.head.appendChild(style);
+
+    document.head.appendChild(
+        style
+    );
 }
 
 
-/* ---------- Global Error Handler ---------- */
+/* =====================================================
+   HEALTH CHECK
+===================================================== */
 
-window.addEventListener(
-    "error",
-    (event) => {
-        console.error(
-            "GillMarket error:",
-            event.error || event.message
+async function checkSupabaseConnection() {
+
+    if (!supabaseClient) {
+
+        console.warn(
+            "GillMarket: Supabase client not ready."
         );
+
+        return false;
     }
-);
 
 
-/* ---------- Start Application ---------- */
+    try {
+
+        /*
+        This only checks that the API client
+        can communicate with Supabase.
+
+        It does not require a database row.
+        */
+
+        const result =
+            await supabaseClient
+                .from("orders")
+                .select("id")
+                .limit(1);
+
+
+        if (result.error) {
+
+            console.error(
+                "Supabase health check:",
+                result.error
+            );
+
+            return false;
+        }
+
+
+        console.log(
+            "GillMarket: orders table connected."
+        );
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "Supabase health check failed:",
+            error
+        );
+
+        return false;
+    }
+}
+
+
+/* =====================================================
+   START GILL MARKET
+===================================================== */
 
 async function startGillMarket() {
+
     console.log(
         "GillMarket starting..."
     );
 
-    addModalStyles();
 
-    const connected =
-        initSupabase();
+    addPaymentStyles();
 
-    if (!connected) {
-        showMessage(
-            "Supabase connect nahi hua.",
-            "error"
-        );
-    }
-
-    await loadServices();
-
-    setupFindServiceButton();
-
-    setupSellerButton();
 
     setupMobileMenu();
 
+    setupFindService();
+
+    setupLogin();
+
+    setupSellerButtons();
+
+    setupModalClosing();
+
+    setupOrderButtons();
+
+    setupOrderSubmit();
+
+    setupSellerSubmit();
+
     setupSearch();
 
+
+    const connected =
+        await initSupabase();
+
+
+    if (connected) {
+
+        console.log(
+            "✅ GillMarket Supabase connected."
+        );
+
+
+        await checkSupabaseConnection();
+
+    } else {
+
+        console.error(
+            "❌ GillMarket Supabase connection failed."
+        );
+
+    }
+
+
     console.log(
-        "GillMarket ready."
+        "GillMarket loaded successfully."
+    );
+
+
+    console.log(
+        "Local orders:",
+        getData(
+            "gillMarketOrders"
+        )
+    );
+
+
+    console.log(
+        "Local services:",
+        getData(
+            "gillMarketServices"
+        )
     );
 }
 
 
-/* ---------- DOM Ready ---------- */
+/* =====================================================
+   PUBLIC API
+===================================================== */
+
+window.GillMarket = {
+
+    openSellerModal,
+
+    openPaymentInfo,
+
+    closeModal,
+
+    startGillMarket,
+
+    getLocalOrders:
+        function () {
+            return getData(
+                "gillMarketOrders"
+            );
+        },
+
+    getLocalServices:
+        function () {
+            return getData(
+                "gillMarketServices"
+            );
+        }
+
+};
+
+
+/* =====================================================
+   START
+===================================================== */
 
 if (
     document.readyState ===
     "loading"
 ) {
+
     document.addEventListener(
         "DOMContentLoaded",
         startGillMarket
     );
+
 } else {
+
     startGillMarket();
+
 }
 
 
-/* ---------- Public Functions ---------- */
-
-window.GillMarket = {
-    openOrderForm,
-    closeOrderForm,
-    openSellerForm,
-    closeSellerForm,
-    loadServices,
-    showMessage
-};
+/* =====================================================
+   END OF MARKET.JS
+============================
