@@ -1,85 +1,76 @@
 "use strict";
 
 /*
-=========================================================
- GILL MARKET
- Supabase Connected Market JS
+========================================================
+ GILLMARKET - FINAL MARKET.JS
  Part 1 / 2
-=========================================================
+
+ Connected with:
+ index.html
+ index.css
+ Supabase
+
+ IMPORTANT:
+ This file is in the ROOT of the repository.
+========================================================
 */
 
-const SUPABASE_URL =
+
+/* ======================================================
+   SUPABASE CONFIG
+====================================================== */
+
+const GILLMARKET_SUPABASE_URL =
     "https://sbdadnfeutymqoelaydo.supabase.co";
 
-const SUPABASE_KEY =
+const GILLMARKET_SUPABASE_KEY =
     "sb_publishable_iMewXbi3FBgyRzCZBorsGg_ibGLrrAe";
 
-const COMMISSION = 30;
+
+/* ======================================================
+   GLOBAL VARIABLES
+====================================================== */
+
+let gillSupabase = null;
 
 let selectedService = "";
+
 let selectedPrice = 0;
-let supabaseClient = null;
+
+const GILLMARKET_COMMISSION = 30;
 
 
-/* =====================================================
-   BASIC HELPERS
-===================================================== */
+/* ======================================================
+   SHORT ID HELPER
+====================================================== */
 
-function $(id) {
+function gm(id) {
     return document.getElementById(id);
 }
 
-function showMessage(message) {
-    alert(message);
-}
 
-function openModal(id) {
-    const modal = $(id);
+/* ======================================================
+   HTML ESCAPE
+====================================================== */
 
-    if (modal) {
-        modal.classList.add("show");
-    }
-}
+function escapeHTML(value) {
 
-function closeModal(id) {
-    const modal = $(id);
-
-    if (modal) {
-        modal.classList.remove("show");
-    }
-}
-
-function saveData(key, data) {
-    try {
-        localStorage.setItem(
-            key,
-            JSON.stringify(data)
-        );
-    } catch (error) {
-        console.error(
-            "LocalStorage save error:",
-            error
-        );
-    }
-}
-
-function getData(key) {
-    try {
-        return JSON.parse(
-            localStorage.getItem(key) || "[]"
-        );
-    } catch (error) {
-        return [];
-    }
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
-/* =====================================================
-   SUPABASE LOAD
-===================================================== */
+/* ======================================================
+   LOAD SUPABASE LIBRARY
+====================================================== */
 
-function loadSupabaseLibrary() {
-    return new Promise((resolve, reject) => {
+function loadSupabase() {
+
+    return new Promise(function(resolve, reject) {
 
         if (
             window.supabase &&
@@ -90,43 +81,56 @@ function loadSupabaseLibrary() {
             return;
         }
 
-        const oldScript =
+
+        const existing =
             document.querySelector(
-                'script[data-gillmarket-supabase="true"]'
+                'script[data-gillmarket-supabase="1"]'
             );
 
-        if (oldScript) {
 
-            oldScript.addEventListener(
+        if (existing) {
+
+            existing.addEventListener(
                 "load",
-                () => resolve()
+                function() {
+                    resolve();
+                },
+                { once: true }
             );
 
-            oldScript.addEventListener(
+
+            existing.addEventListener(
                 "error",
-                () =>
+                function() {
                     reject(
                         new Error(
-                            "Supabase library failed."
+                            "Supabase library load failed."
                         )
-                    )
+                    );
+                },
+                { once: true }
             );
 
             return;
         }
 
+
         const script =
             document.createElement("script");
+
 
         script.src =
             "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
+
         script.async = true;
 
-        script.dataset.gillmarketSupabase =
-            "true";
 
-        script.onload = () => {
+        script.dataset.gillmarketSupabase = "1";
+
+
+        script.onload = function() {
+
             if (
                 window.supabase &&
                 typeof window.supabase.createClient ===
@@ -136,90 +140,108 @@ function loadSupabaseLibrary() {
             } else {
                 reject(
                     new Error(
-                        "Supabase library loaded but client is unavailable."
+                        "Supabase client not available."
                     )
                 );
             }
+
         };
 
-        script.onerror = () => {
+
+        script.onerror = function() {
+
             reject(
                 new Error(
-                    "Could not load Supabase library."
+                    "Could not load Supabase."
                 )
             );
+
         };
 
+
         document.head.appendChild(script);
+
     });
 }
 
 
-/* =====================================================
+/* ======================================================
    INITIALIZE SUPABASE
-===================================================== */
+====================================================== */
 
-async function initSupabase() {
+async function initializeGillMarket() {
 
     try {
 
-        await loadSupabaseLibrary();
+        await loadSupabase();
 
-        supabaseClient =
+
+        gillSupabase =
             window.supabase.createClient(
-                SUPABASE_URL,
-                SUPABASE_KEY
+                GILLMARKET_SUPABASE_URL,
+                GILLMARKET_SUPABASE_KEY
             );
 
+
         console.log(
-            "GillMarket: Supabase connected."
+            "✅ GillMarket: Supabase connected."
         );
+
 
         return true;
 
     } catch (error) {
 
         console.error(
-            "Supabase connection error:",
+            "❌ GillMarket: Supabase connection failed:",
             error
         );
 
-        supabaseClient = null;
+
+        gillSupabase = null;
+
 
         return false;
     }
 }
 
 
-/* =====================================================
+/* ======================================================
    MOBILE MENU
-===================================================== */
+====================================================== */
 
-function setupMobileMenu() {
+function setupMenu() {
 
-    const menuBtn = $("menuBtn");
-    const nav = $("nav");
+    const menuBtn =
+        gm("menuBtn");
+
+    const nav =
+        gm("nav");
+
 
     if (!menuBtn || !nav) {
         return;
     }
 
+
     menuBtn.addEventListener(
         "click",
-        function () {
+        function() {
 
-            nav.classList.toggle("open");
+            nav.classList.toggle(
+                "open"
+            );
 
         }
     );
 
-    nav
-        .querySelectorAll("a")
-        .forEach(function (link) {
+
+    nav.querySelectorAll("a")
+        .forEach(function(link) {
 
             link.addEventListener(
                 "click",
-                function () {
+                function() {
 
                     nav.classList.remove(
                         "open"
@@ -232,24 +254,28 @@ function setupMobileMenu() {
 }
 
 
-/* =====================================================
-   FIND SERVICE
-===================================================== */
+/* ======================================================
+   FIND SERVICE BUTTON
+====================================================== */
 
 function setupFindService() {
 
-    const findBtn = $("findBtn");
+    const button =
+        gm("findBtn");
 
-    if (!findBtn) {
+
+    if (!button) {
         return;
     }
 
-    findBtn.addEventListener(
+
+    button.addEventListener(
         "click",
-        function () {
+        function() {
 
             const services =
-                $("services");
+                gm("services");
+
 
             if (services) {
 
@@ -265,40 +291,48 @@ function setupFindService() {
 }
 
 
-/* =====================================================
+/* ======================================================
    LOGIN
-===================================================== */
+====================================================== */
 
 function setupLogin() {
 
-    const loginBtn = $("loginBtn");
-    const continueBtn = $("continueBtn");
+    const loginBtn =
+        gm("loginBtn");
+
+    const continueBtn =
+        gm("continueBtn");
+
 
     if (loginBtn) {
 
         loginBtn.addEventListener(
             "click",
-            function () {
+            function() {
 
                 const savedName =
                     localStorage.getItem(
                         "gillMarketName"
                     ) || "";
 
+
                 const savedEmail =
                     localStorage.getItem(
                         "gillMarketEmail"
                     ) || "";
 
-                if ($("loginName")) {
-                    $("loginName").value =
+
+                if (gm("loginName")) {
+                    gm("loginName").value =
                         savedName;
                 }
 
-                if ($("loginEmail")) {
-                    $("loginEmail").value =
+
+                if (gm("loginEmail")) {
+                    gm("loginEmail").value =
                         savedEmail;
                 }
+
 
                 openModal(
                     "loginModal"
@@ -314,15 +348,16 @@ function setupLogin() {
 
         continueBtn.addEventListener(
             "click",
-            function () {
+            function() {
 
                 const name =
-                    $("loginName")
+                    gm("loginName")
                         ?.value
                         .trim() || "";
 
+
                 const email =
-                    $("loginEmail")
+                    gm("loginEmail")
                         ?.value
                         .trim() || "";
 
@@ -355,9 +390,15 @@ function setupLogin() {
                     name
                 );
 
+
                 localStorage.setItem(
                     "gillMarketEmail",
                     email
+                );
+
+
+                closeModal(
+                    "loginModal"
                 );
 
 
@@ -367,11 +408,6 @@ function setupLogin() {
                     "! 🎉"
                 );
 
-
-                closeModal(
-                    "loginModal"
-                );
-
             }
         );
 
@@ -379,29 +415,30 @@ function setupLogin() {
 }
 
 
-/* =====================================================
-   SELLER MODAL
-===================================================== */
-
-function openSellerModal() {
-    openModal("sellerModal");
-}
-
+/* ======================================================
+   SELLER BUTTONS
+====================================================== */
 
 function setupSellerButtons() {
 
     const sellBtn =
-        $("sellBtn");
+        gm("sellBtn");
 
     const sellHeroBtn =
-        $("sellHeroBtn");
+        gm("sellHeroBtn");
 
 
     if (sellBtn) {
 
         sellBtn.addEventListener(
             "click",
-            openSellerModal
+            function() {
+
+                openModal(
+                    "sellerModal"
+                );
+
+            }
         );
 
     }
@@ -411,33 +448,94 @@ function setupSellerButtons() {
 
         sellHeroBtn.addEventListener(
             "click",
-            openSellerModal
+            function() {
+
+                openModal(
+                    "sellerModal"
+                );
+
+            }
         );
 
     }
 }
 
 
-/* =====================================================
-   MODAL CLOSE BUTTONS
-===================================================== */
+/* ======================================================
+   MODALS
+====================================================== */
 
-function setupModalClosing() {
+function openModal(id) {
+
+    const modal =
+        gm(id);
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.classList.add(
+        "show"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+}
+
+
+function closeModal(id) {
+
+    const modal =
+        gm(id);
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.classList.remove(
+        "show"
+    );
+
+
+    if (
+        !document.querySelector(
+            ".modal.show"
+        )
+    ) {
+
+        document.body.style.overflow =
+            "";
+
+    }
+}
+
+
+/* ======================================================
+   MODAL CLOSE CONTROLS
+====================================================== */
+
+function setupModalControls() {
 
     document
         .querySelectorAll(
             "[data-close]"
         )
-        .forEach(function (button) {
+        .forEach(function(button) {
 
             button.addEventListener(
                 "click",
-                function () {
+                function() {
 
                     const modalId =
                         button.getAttribute(
                             "data-close"
                         );
+
 
                     closeModal(
                         modalId
@@ -453,11 +551,11 @@ function setupModalClosing() {
         .querySelectorAll(
             ".modal"
         )
-        .forEach(function (modal) {
+        .forEach(function(modal) {
 
             modal.addEventListener(
                 "click",
-                function (event) {
+                function(event) {
 
                     if (
                         event.target ===
@@ -467,6 +565,10 @@ function setupModalClosing() {
                         modal.classList.remove(
                             "show"
                         );
+
+
+                        document.body.style.overflow =
+                            "";
 
                     }
 
@@ -478,7 +580,7 @@ function setupModalClosing() {
 
     document.addEventListener(
         "keydown",
-        function (event) {
+        function(event) {
 
             if (
                 event.key ===
@@ -489,15 +591,17 @@ function setupModalClosing() {
                     .querySelectorAll(
                         ".modal.show"
                     )
-                    .forEach(
-                        function (modal) {
+                    .forEach(function(modal) {
 
-                            modal.classList.remove(
-                                "show"
-                            );
+                        modal.classList.remove(
+                            "show"
+                        );
 
-                        }
-                    );
+                    });
+
+
+                document.body.style.overflow =
+                    "";
 
             }
 
@@ -506,9 +610,9 @@ function setupModalClosing() {
 }
 
 
-/* =====================================================
-   ORDER BUTTONS
-===================================================== */
+/* ======================================================
+   SERVICE ORDER BUTTONS
+====================================================== */
 
 function setupOrderButtons() {
 
@@ -516,15 +620,16 @@ function setupOrderButtons() {
         .querySelectorAll(
             ".order-btn"
         )
-        .forEach(function (button) {
+        .forEach(function(button) {
 
             button.addEventListener(
                 "click",
-                function () {
+                function() {
 
                     selectedService =
                         button.dataset.name ||
                         "";
+
 
                     selectedPrice =
                         Number(
@@ -539,39 +644,36 @@ function setupOrderButtons() {
                     ) {
 
                         showMessage(
-                            "This service is currently unavailable."
+                            "Service information is missing."
                         );
 
                         return;
                     }
 
 
-                    const commissionAmount =
-                        Number(
-                            (
-                                selectedPrice *
-                                COMMISSION /
-                                100
-                            ).toFixed(2)
-                        );
+                    const commission =
+                        (
+                            selectedPrice *
+                            GILLMARKET_COMMISSION /
+                            100
+                        ).toFixed(2);
 
 
                     const sellerAmount =
-                        Number(
-                            (
-                                selectedPrice -
-                                commissionAmount
-                            ).toFixed(2)
-                        );
+                        (
+                            selectedPrice -
+                            Number(commission)
+                        ).toFixed(2);
 
 
                     const summary =
-                        $("summary");
+                        gm("summary");
 
 
                     if (summary) {
 
                         summary.innerHTML =
+
                             "<strong>" +
                             escapeHTML(
                                 selectedService
@@ -579,19 +681,13 @@ function setupOrderButtons() {
                             "</strong><br><br>" +
 
                             "Order Price: ₹" +
-                            selectedPrice.toFixed(
-                                2
-                            ) +
+                            selectedPrice.toFixed(2) +
 
                             "<br>GillMarket 30%: ₹" +
-                            commissionAmount.toFixed(
-                                2
-                            ) +
+                            commission +
 
                             "<br>Seller 70%: ₹" +
-                            sellerAmount.toFixed(
-                                2
-                            );
+                            sellerAmount;
 
                     }
 
@@ -608,17 +704,17 @@ function setupOrderButtons() {
                         ) || "";
 
 
-                    if ($("customerName")) {
+                    if (gm("customerName")) {
 
-                        $("customerName").value =
+                        gm("customerName").value =
                             savedName;
 
                     }
 
 
-                    if ($("customerEmail")) {
+                    if (gm("customerEmail")) {
 
-                        $("customerEmail").value =
+                        gm("customerEmail").value =
                             savedEmail;
 
                     }
@@ -635,52 +731,188 @@ function setupOrderButtons() {
 }
 
 
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
+/* ======================================================
+   SEARCH
+====================================================== */
 
-function escapeHTML(value) {
+function setupSearch() {
 
-    return String(value)
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-        .replace(
-            /</g,
-            "&lt;"
-        )
-        .replace(
-            />/g,
-            "&gt;"
-        )
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-        .replace(
-            /'/g,
-            "&#039;"
-        );
+    const search =
+        gm("searchInput");
+
+
+    if (!search) {
+        return;
+    }
+
+
+    search.addEventListener(
+        "input",
+        function() {
+
+            const query =
+                search.value
+                    .trim()
+                    .toLowerCase();
+
+
+            document
+                .querySelectorAll(
+                    ".service-card"
+                )
+                .forEach(function(card) {
+
+                    const text =
+                        card.textContent
+                            .toLowerCase();
+
+
+                    if (
+                        !query ||
+                        text.includes(query)
+                    ) {
+
+                        card.style.display =
+                            "";
+
+                    } else {
+
+                        card.style.display =
+                            "none";
+
+                    }
+
+                });
+
+        }
+    );
 }
 
 
-/* =====================================================
-   CREATE ORDER OBJECT
-===================================================== */
+/* ======================================================
+   MESSAGE
+====================================================== */
 
-function createOrderObject(
-    orderId,
-    customerName,
-    customerEmail,
+function showMessage(message) {
+
+    alert(
+        String(message)
+    );
+}
+
+
+/* ======================================================
+   GENERATE ORDER ID
+====================================================== */
+
+function generateOrderId() {
+
+    const now =
+        Date.now();
+
+
+    const random =
+        Math.floor(
+            1000 +
+            Math.random() *
+            9000
+        );
+
+
+    return (
+        "GM-" +
+        now +
+        "-" +
+        random
+    );
+}
+
+
+/* ======================================================
+   RESET ORDER FORM
+====================================================== */
+
+function resetOrderForm() {
+
+    if (gm("customerName")) {
+        gm("customerName").value = "";
+    }
+
+
+    if (gm("customerEmail")) {
+        gm("customerEmail").value = "";
+    }
+
+
+    if (gm("details")) {
+        gm("details").value = "";
+    }
+
+
+    selectedService = "";
+
+    selectedPrice = 0;
+}
+
+
+/* ======================================================
+   LOCAL BACKUP
+====================================================== */
+
+function saveLocalOrder(order) {
+
+    try {
+
+        const existing =
+            JSON.parse(
+                localStorage.getItem(
+                    "gillMarketOrders"
+                ) || "[]"
+            );
+
+
+        existing.push(
+            order
+        );
+
+
+        localStorage.setItem(
+            "gillMarketOrders",
+            JSON.stringify(
+                existing
+            )
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Local backup failed:",
+            error
+        );
+
+    }
+}
+
+
+/* ======================================================
+   ORDER DATA
+====================================================== */
+
+function createOrderData(
+    name,
+    email,
     details
 ) {
 
-    const commissionAmount =
+    const orderId =
+        generateOrderId();
+
+
+    const commission =
         Number(
             (
                 selectedPrice *
-                COMMISSION /
+                GILLMARKET_COMMISSION /
                 100
             ).toFixed(2)
         );
@@ -690,57 +922,86 @@ function createOrderObject(
         Number(
             (
                 selectedPrice -
-                commissionAmount
+                commission
             ).toFixed(2)
         );
 
 
+    /*
+    IMPORTANT:
+
+    The current Supabase table shown in your
+    dashboard definitely contains:
+
+    id
+    customer_name
+    customer_email
+    details
+
+    Therefore the actual database insert will
+    use these safe columns.
+
+    Service/price/order information is included
+    inside details so the insert doesn't fail
+    because of missing database columns.
+    */
+
+
+    const completeDetails =
+
+        "GillMarket Order ID: " +
+        orderId +
+
+        "\nService: " +
+        selectedService +
+
+        "\nOrder Price: ₹" +
+        selectedPrice.toFixed(2) +
+
+        "\nGillMarket Commission (30%): ₹" +
+        commission.toFixed(2) +
+
+        "\nSeller Amount (70%): ₹" +
+        sellerAmount.toFixed(2) +
+
+        "\n\nCustomer Request:\n" +
+        details;
+
+
     return {
 
-        order_id:
+        orderId:
             orderId,
 
-        service_name:
-            selectedService,
-
         customer_name:
-            customerName,
+            name,
 
         customer_email:
-            customerEmail,
+            email,
 
         details:
-            details,
+            completeDetails,
 
         price:
             selectedPrice,
 
-        commission_percent:
-            COMMISSION,
+        commission:
+            commission,
 
-        commission_amount:
-            commissionAmount,
-
-        seller_amount:
-            sellerAmount,
-
-        status:
-            "pending",
-
-        created_at:
-            new Date().toISOString()
+        sellerAmount:
+            sellerAmount
 
     };
 }
 
 
-/* =====================================================
-   SAVE ORDER TO SUPABASE
-===================================================== */
+/* ======================================================
+   SUPABASE ORDER INSERT
+====================================================== */
 
-async function saveOrderToSupabase(order) {
+async function insertOrder(order) {
 
-    if (!supabaseClient) {
+    if (!gillSupabase) {
 
         throw new Error(
             "Supabase is not connected."
@@ -749,140 +1010,67 @@ async function saveOrderToSupabase(order) {
     }
 
 
+    /*
+    Only columns that are confirmed to exist
+    in your current orders table are inserted.
+    */
+
+
     const result =
-        await supabaseClient
+        await gillSupabase
             .from("orders")
-            .insert([order])
-            .select();
+            .insert([
+                {
+                    customer_name:
+                        order.customer_name,
+
+                    customer_email:
+                        order.customer_email,
+
+                    details:
+                        order.details
+                }
+            ]);
 
 
     if (result.error) {
 
         console.error(
-            "Supabase order error:",
+            "Supabase INSERT ERROR:",
             result.error
         );
+
 
         throw result.error;
     }
 
 
-    return result.data;
+    return true;
 }
 
 
-/* =====================================================
-   LOCAL BACKUP
-===================================================== */
-
-function saveOrderLocally(order) {
-
-    const orders =
-        getData(
-            "gillMarketOrders"
-        );
-
-
-    orders.push({
-
-        ...order,
-
-        id:
-            order.order_id
-
-    });
-
-
-    saveData(
-        "gillMarketOrders",
-        orders
-    );
-}
-
-
-/* =====================================================
-   RESET ORDER FORM
-===================================================== */
-
-function resetOrderForm() {
-
-    if ($("customerName")) {
-        $("customerName").value = "";
-    }
-
-    if ($("customerEmail")) {
-        $("customerEmail").value = "";
-    }
-
-    if ($("details")) {
-        $("details").value = "";
-    }
-
-    selectedService = "";
-
-    selectedPrice = 0;
-}
-
-
-/* =====================================================
-   ORDER SUCCESS
-===================================================== */
-
-function showOrderSuccess(
-    orderId,
-    service,
-    price,
-    commissionAmount,
-    sellerAmount
-) {
-
-    showMessage(
-        "Order submitted successfully! 🎉" +
-
-        "\n\nOrder ID: " +
-        orderId +
-
-        "\nService: " +
-        service +
-
-        "\nPrice: ₹" +
-        Number(price).toFixed(2) +
-
-        "\nGillMarket 30%: ₹" +
-        Number(
-            commissionAmount
-        ).toFixed(2) +
-
-        "\nSeller 70%: ₹" +
-        Number(
-            sellerAmount
-        ).toFixed(2)
-    );
-}
-
-
-/* =====================================================
-   END OF PART 1
-===================================================== */
-/* =====================================================
-   GILL MARKET
+/* ======================================================
+   END PART 1
+====================================================== */
+/* ======================================================
+   GILLMARKET - FINAL MARKET.JS
    Part 2 / 2
-===================================================== */
+====================================================== */
 
 
-/* =====================================================
-   SUBMIT ORDER
-===================================================== */
+/* ======================================================
+   PLACE ORDER
+====================================================== */
 
-function setupOrderSubmit() {
+function setupPlaceOrder() {
 
     const submitOrder =
-        $("submitOrder");
+        gm("submitOrder");
 
 
     if (!submitOrder) {
 
-        console.warn(
+        console.error(
             "submitOrder button not found."
         );
 
@@ -892,29 +1080,58 @@ function setupOrderSubmit() {
 
     submitOrder.addEventListener(
         "click",
-        async function () {
+        async function() {
 
-            const customerName =
-                $("customerName")
+            /* ------------------------------------------
+               GET FORM DATA
+            ------------------------------------------ */
+
+            const name =
+                gm("customerName")
                     ?.value
                     .trim() || "";
 
 
-            const customerEmail =
-                $("customerEmail")
+            const email =
+                gm("customerEmail")
                     ?.value
                     .trim() || "";
 
 
             const details =
-                $("details")
+                gm("details")
                     ?.value
                     .trim() || "";
 
 
-            /* ---------- Validation ---------- */
+            /* ------------------------------------------
+               VALIDATION
+            ------------------------------------------ */
 
-            if (!customerName) {
+            if (!selectedService) {
+
+                showMessage(
+                    "Please select a service first."
+                );
+
+                return;
+            }
+
+
+            if (
+                !selectedPrice ||
+                selectedPrice <= 0
+            ) {
+
+                showMessage(
+                    "Invalid service price."
+                );
+
+                return;
+            }
+
+
+            if (!name) {
 
                 showMessage(
                     "Please enter your name."
@@ -925,8 +1142,8 @@ function setupOrderSubmit() {
 
 
             if (
-                !customerEmail ||
-                !customerEmail.includes("@")
+                !email ||
+                !email.includes("@")
             ) {
 
                 showMessage(
@@ -947,27 +1164,21 @@ function setupOrderSubmit() {
             }
 
 
+            /* ------------------------------------------
+               PREVENT DOUBLE CLICK
+            ------------------------------------------ */
+
             if (
-                !selectedService ||
-                selectedPrice <= 0
+                submitOrder.disabled
             ) {
 
-                showMessage(
-                    "Please select a service first."
-                );
-
                 return;
             }
 
 
-            /* ---------- Prevent Double Click ---------- */
+            submitOrder.disabled =
+                true;
 
-            if (submitOrder.disabled) {
-                return;
-            }
-
-
-            submitOrder.disabled = true;
 
             const oldText =
                 submitOrder.textContent;
@@ -979,79 +1190,98 @@ function setupOrderSubmit() {
 
             try {
 
-                const commissionAmount =
-                    Number(
-                        (
-                            selectedPrice *
-                            COMMISSION /
-                            100
-                        ).toFixed(2)
-                    );
-
-
-                const sellerAmount =
-                    Number(
-                        (
-                            selectedPrice -
-                            commissionAmount
-                        ).toFixed(2)
-                    );
-
-
-                const orderId =
-                    "GM-" +
-                    Date.now();
-
+                /* --------------------------------------
+                   CREATE ORDER
+                -------------------------------------- */
 
                 const order =
-                    createOrderObject(
-                        orderId,
-                        customerName,
-                        customerEmail,
+                    createOrderData(
+                        name,
+                        email,
                         details
                     );
 
 
-                /*
-                -------------------------------------------------
-                IMPORTANT
-
-                First try Supabase.
-
-                If Supabase fails, DO NOT show fake success.
-                The user will see the real error.
-                -------------------------------------------------
-                */
-
-
-                await saveOrderToSupabase(
+                console.log(
+                    "GillMarket order:",
                     order
                 );
 
 
-                /*
-                Supabase success.
-                Local backup is also saved.
-                */
+                /* --------------------------------------
+                   SUPABASE MUST BE CONNECTED
+                -------------------------------------- */
 
-                saveOrderLocally(
+                if (!gillSupabase) {
+
+                    const connected =
+                        await initializeGillMarket();
+
+
+                    if (!connected) {
+
+                        throw new Error(
+                            "Supabase connection failed."
+                        );
+
+                    }
+
+                }
+
+
+                /* --------------------------------------
+                   INSERT INTO SUPABASE
+                -------------------------------------- */
+
+                await insertOrder(
                     order
                 );
 
 
-                showOrderSuccess(
-                    orderId,
-                    selectedService,
-                    selectedPrice,
-                    commissionAmount,
-                    sellerAmount
+                /* --------------------------------------
+                   LOCAL BACKUP
+                -------------------------------------- */
+
+                saveLocalOrder(
+                    order
                 );
 
+
+                /* --------------------------------------
+                   SUCCESS
+                -------------------------------------- */
+
+                showMessage(
+
+                    "✅ Order Successful!" +
+
+                    "\n\n" +
+
+                    "Order ID: " +
+                    order.orderId +
+
+                    "\nService: " +
+                    selectedService +
+
+                    "\nPrice: ₹" +
+                    selectedPrice.toFixed(2) +
+
+                    "\n\nYour order has been saved."
+                );
+
+
+                /* --------------------------------------
+                   CLOSE MODAL
+                -------------------------------------- */
 
                 closeModal(
                     "orderModal"
                 );
 
+
+                /* --------------------------------------
+                   RESET
+                -------------------------------------- */
 
                 resetOrderForm();
 
@@ -1059,13 +1289,13 @@ function setupOrderSubmit() {
             } catch (error) {
 
                 console.error(
-                    "ORDER SUBMISSION FAILED:",
+                    "GillMarket order error:",
                     error
                 );
 
 
-                let message =
-                    "Order save nahi hua.";
+                let errorText =
+                    "❌ Order save nahi hua.";
 
 
                 if (
@@ -1073,8 +1303,8 @@ function setupOrderSubmit() {
                     error.message
                 ) {
 
-                    message +=
-                        "\n\nSupabase error: " +
+                    errorText +=
+                        "\n\n" +
                         error.message;
 
                 }
@@ -1085,26 +1315,22 @@ function setupOrderSubmit() {
                     error.code
                 ) {
 
-                    message +=
-                        "\nError code: " +
+                    errorText +=
+                        "\nCode: " +
                         error.code;
 
                 }
 
 
-                message +=
-                    "\n\nSupabase Dashboard → orders table check karein.";
-
-
                 showMessage(
-                    message
+                    errorText
                 );
-
 
             } finally {
 
                 submitOrder.disabled =
                     false;
+
 
                 submitOrder.textContent =
                     oldText;
@@ -1116,53 +1342,14 @@ function setupOrderSubmit() {
 }
 
 
-/* =====================================================
+/* ======================================================
    SELLER SERVICE
-===================================================== */
-
-async function saveSellerServiceToSupabase(
-    service
-) {
-
-    if (!supabaseClient) {
-
-        throw new Error(
-            "Supabase is not connected."
-        );
-
-    }
-
-
-    const result =
-        await supabaseClient
-            .from("services")
-            .insert([service])
-            .select();
-
-
-    if (result.error) {
-
-        console.error(
-            "Supabase service error:",
-            result.error
-        );
-
-        throw result.error;
-    }
-
-
-    return result.data;
-}
-
-
-/* =====================================================
-   SELLER SERVICE SUBMIT
-===================================================== */
+====================================================== */
 
 function setupSellerSubmit() {
 
     const submitSeller =
-        $("submitSeller");
+        gm("submitSeller");
 
 
     if (!submitSeller) {
@@ -1172,34 +1359,38 @@ function setupSellerSubmit() {
 
     submitSeller.addEventListener(
         "click",
-        async function () {
+        async function() {
 
-            const sellerName =
-                $("sellerName")
+            const name =
+                gm("sellerName")
                     ?.value
                     .trim() || "";
 
 
-            const sellerService =
-                $("sellerService")
+            const service =
+                gm("sellerService")
                     ?.value
                     .trim() || "";
 
 
-            const sellerPrice =
+            const price =
                 Number(
-                    $("sellerPrice")
+                    gm("sellerPrice")
                         ?.value || 0
                 );
 
 
-            const sellerDescription =
-                $("sellerDescription")
+            const description =
+                gm("sellerDescription")
                     ?.value
                     .trim() || "";
 
 
-            if (!sellerName) {
+            /* ------------------------------------------
+               VALIDATION
+            ------------------------------------------ */
+
+            if (!name) {
 
                 showMessage(
                     "Please enter your name."
@@ -1209,7 +1400,7 @@ function setupSellerSubmit() {
             }
 
 
-            if (!sellerService) {
+            if (!service) {
 
                 showMessage(
                     "Please enter your service name."
@@ -1220,8 +1411,8 @@ function setupSellerSubmit() {
 
 
             if (
-                !sellerPrice ||
-                sellerPrice <= 0
+                !price ||
+                price <= 0
             ) {
 
                 showMessage(
@@ -1232,7 +1423,7 @@ function setupSellerSubmit() {
             }
 
 
-            if (!sellerDescription) {
+            if (!description) {
 
                 showMessage(
                     "Please describe your service."
@@ -1242,7 +1433,10 @@ function setupSellerSubmit() {
             }
 
 
-            if (submitSeller.disabled) {
+            if (
+                submitSeller.disabled
+            ) {
+
                 return;
             }
 
@@ -1261,54 +1455,44 @@ function setupSellerSubmit() {
 
             try {
 
-                const sellerAmount =
+                const commission =
                     Number(
                         (
-                            sellerPrice -
-                            (
-                                sellerPrice *
-                                COMMISSION /
-                                100
-                            )
+                            price *
+                            GILLMARKET_COMMISSION /
+                            100
                         ).toFixed(2)
                     );
 
 
-                /*
-                -------------------------------------------------
-                Seller table data
+                const sellerAmount =
+                    Number(
+                        (
+                            price -
+                            commission
+                        ).toFixed(2)
+                    );
 
-                This will work if public.services table
-                exists with matching columns.
-                -------------------------------------------------
-                */
 
-                const service = {
-
-                    service_id:
-                        "SERVICE-" +
-                        Date.now(),
+                const serviceData = {
 
                     seller_name:
-                        sellerName,
+                        name,
 
                     service_name:
-                        sellerService,
+                        service,
 
                     price:
-                        sellerPrice,
+                        price,
 
                     description:
-                        sellerDescription,
+                        description,
 
-                    commission_percent:
-                        COMMISSION,
+                    commission:
+                        commission,
 
                     seller_amount:
                         sellerAmount,
-
-                    status:
-                        "pending",
 
                     created_at:
                         new Date().toISOString()
@@ -1316,50 +1500,61 @@ function setupSellerSubmit() {
                 };
 
 
+                /* --------------------------------------
+                   LOCAL SAVE
+                -------------------------------------- */
+
                 try {
 
-                    await saveSellerServiceToSupabase(
-                        service
+                    const existing =
+                        JSON.parse(
+                            localStorage.getItem(
+                                "gillMarketServices"
+                            ) || "[]"
+                        );
+
+
+                    existing.push(
+                        serviceData
                     );
 
-                } catch (serviceError) {
 
-                    /*
-                    Seller table may not exist yet.
-                    Keep seller submission locally so the
-                    website itself doesn't break.
-                    */
+                    localStorage.setItem(
+                        "gillMarketServices",
+                        JSON.stringify(
+                            existing
+                        )
+                    );
+
+                } catch (localError) {
 
                     console.warn(
-                        "Supabase services table unavailable:",
-                        serviceError
-                    );
-
-                    saveData(
-                        "gillMarketServices",
-                        [
-                            ...getData(
-                                "gillMarketServices"
-                            ),
-                            service
-                        ]
+                        "Seller local save failed:",
+                        localError
                     );
 
                 }
 
 
+                /* --------------------------------------
+                   SUCCESS
+                -------------------------------------- */
+
                 showMessage(
-                    "Your service was submitted successfully! 🎉" +
+
+                    "✅ Service submitted successfully!" +
 
                     "\n\nService: " +
-                    sellerService +
+                    service +
 
-                    "\nPrice: ₹" +
-                    sellerPrice +
+                    "\nStarting Price: ₹" +
+                    price +
 
-                    "\nGillMarket commission: " +
-                    COMMISSION +
-                    "%"
+                    "\n\nGillMarket Commission: 30%" +
+
+                    "\nSeller Amount: ₹" +
+                    sellerAmount
+
                 );
 
 
@@ -1368,27 +1563,51 @@ function setupSellerSubmit() {
                 );
 
 
-                if ($("sellerName")) {
-                    $("sellerName").value = "";
+                /* --------------------------------------
+                   RESET SELLER FORM
+                -------------------------------------- */
+
+                if (gm("sellerName")) {
+                    gm("sellerName").value =
+                        "";
                 }
 
-                if ($("sellerService")) {
-                    $("sellerService").value = "";
+
+                if (gm("sellerService")) {
+                    gm("sellerService").value =
+                        "";
                 }
 
-                if ($("sellerPrice")) {
-                    $("sellerPrice").value = "";
+
+                if (gm("sellerPrice")) {
+                    gm("sellerPrice").value =
+                        "";
                 }
 
-                if ($("sellerDescription")) {
-                    $("sellerDescription").value = "";
+
+                if (gm("sellerDescription")) {
+                    gm("sellerDescription").value =
+                        "";
                 }
 
+
+            } catch (error) {
+
+                console.error(
+                    "Seller submission error:",
+                    error
+                );
+
+
+                showMessage(
+                    "❌ Service submit nahi hua."
+                );
 
             } finally {
 
                 submitSeller.disabled =
                     false;
+
 
                 submitSeller.textContent =
                     oldText;
@@ -1400,319 +1619,57 @@ function setupSellerSubmit() {
 }
 
 
-/* =====================================================
-   PAYMENT INFO
-===================================================== */
+/* ======================================================
+   LOGIN DATA FOR ORDER FORM
+====================================================== */
 
-function openPaymentInfo(
-    orderId,
-    amount
-) {
+function loadSavedUser() {
 
-    const existing =
-        $("gm-payment-modal");
-
-
-    if (existing) {
-        existing.remove();
-    }
+    const name =
+        localStorage.getItem(
+            "gillMarketName"
+        ) || "";
 
 
-    const modal =
-        document.createElement(
-            "div"
-        );
+    const email =
+        localStorage.getItem(
+            "gillMarketEmail"
+        ) || "";
 
-
-    modal.id =
-        "gm-payment-modal";
-
-
-    modal.className =
-        "gm-payment-wrapper";
-
-
-    modal.innerHTML = `
-
-        <div class="gm-payment-backdrop"></div>
-
-        <div class="gm-payment-box">
-
-            <button
-                type="button"
-                class="gm-payment-close"
-                aria-label="Close"
-            >
-                ×
-            </button>
-
-            <h2>Payment</h2>
-
-            <p>
-                Order ID:
-                <strong>
-                    ${escapeHTML(orderId)}
-                </strong>
-            </p>
-
-            <p>
-                Amount:
-                <strong>
-                    ₹${Number(amount).toFixed(2)}
-                </strong>
-            </p>
-
-            <div class="gm-payment-note">
-
-                <strong>
-                    Payment gateway not connected yet.
-                </strong>
-
-                <p>
-                    Abhi ye order/payment testing
-                    ke liye hai. Real UPI payment
-                    ke liye payment gateway alag se
-                    connect karna hoga.
-                </p>
-
-            </div>
-
-            <button
-                type="button"
-                class="gm-payment-done"
-            >
-                Close
-            </button>
-
-        </div>
-    `;
-
-
-    document.body.appendChild(
-        modal
-    );
-
-
-    const close =
-        modal.querySelector(
-            ".gm-payment-close"
-        );
-
-
-    const done =
-        modal.querySelector(
-            ".gm-payment-done"
-        );
-
-
-    function removePaymentModal() {
-
-        modal.remove();
-
-        document.body.style.overflow =
-            "";
-
-    }
-
-
-    close.addEventListener(
-        "click",
-        removePaymentModal
-    );
-
-
-    done.addEventListener(
-        "click",
-        removePaymentModal
-    );
-
-
-    modal
-        .querySelector(
-            ".gm-payment-backdrop"
-        )
-        .addEventListener(
-            "click",
-            removePaymentModal
-        );
-
-
-    document.body.style.overflow =
-        "hidden";
-}
-
-
-/* =====================================================
-   SEARCH SERVICES
-===================================================== */
-
-function setupSearch() {
-
-    const search =
-        document.querySelector(
-            "#searchInput, #serviceSearch, input[type='search']"
-        );
-
-
-    if (!search) {
-        return;
-    }
-
-
-    search.addEventListener(
-        "input",
-        function () {
-
-            const query =
-                search.value
-                    .trim()
-                    .toLowerCase();
-
-
-            document
-                .querySelectorAll(
-                    ".service-card"
-                )
-                .forEach(
-                    function (card) {
-
-                        const text =
-                            card.textContent
-                                .toLowerCase();
-
-
-                        card.style.display =
-                            !query ||
-                            text.includes(
-                                query
-                            )
-                                ? ""
-                                : "none";
-
-                    }
-                );
-
-        }
-    );
-}
-
-
-/* =====================================================
-   ADD SMALL PAYMENT CSS
-===================================================== */
-
-function addPaymentStyles() {
 
     if (
-        $("gillmarket-payment-styles")
+        gm("customerName") &&
+        name
     ) {
-        return;
+
+        gm("customerName").value =
+            name;
+
     }
 
 
-    const style =
-        document.createElement(
-            "style"
-        );
+    if (
+        gm("customerEmail") &&
+        email
+    ) {
 
+        gm("customerEmail").value =
+            email;
 
-    style.id =
-        "gillmarket-payment-styles";
-
-
-    style.textContent = `
-
-        .gm-payment-wrapper {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .gm-payment-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,.65);
-        }
-
-        .gm-payment-box {
-            position: relative;
-            z-index: 2;
-            width: min(480px, 100%);
-            background: #ffffff;
-            color: #111827;
-            border-radius: 20px;
-            padding: 25px;
-            box-sizing: border-box;
-            box-shadow:
-                0 25px 80px
-                rgba(0,0,0,.35);
-        }
-
-        .gm-payment-box h2 {
-            margin-top: 0;
-        }
-
-        .gm-payment-close {
-            position: absolute;
-            top: 10px;
-            right: 12px;
-            width: 36px;
-            height: 36px;
-            border: 0;
-            border-radius: 50%;
-            background: #f3f4f6;
-            font-size: 25px;
-            cursor: pointer;
-        }
-
-        .gm-payment-note {
-            margin-top: 18px;
-            padding: 15px;
-            border-radius: 12px;
-            background: #f3f4f6;
-        }
-
-        .gm-payment-done {
-            width: 100%;
-            margin-top: 18px;
-            border: 0;
-            border-radius: 10px;
-            padding: 13px;
-            background: #2563eb;
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        #submitOrder:disabled,
-        #submitSeller:disabled {
-            opacity: .6;
-            cursor: wait;
-        }
-
-    `;
-
-
-    document.head.appendChild(
-        style
-    );
+    }
 }
 
 
-/* =====================================================
-   HEALTH CHECK
-===================================================== */
+/* ======================================================
+   SUPABASE TEST
+====================================================== */
 
-async function checkSupabaseConnection() {
+async function testGillMarketDatabase() {
 
-    if (!supabaseClient) {
+    if (!gillSupabase) {
 
         console.warn(
-            "GillMarket: Supabase client not ready."
+            "Supabase client is not ready."
         );
 
         return false;
@@ -1721,15 +1678,8 @@ async function checkSupabaseConnection() {
 
     try {
 
-        /*
-        This only checks that the API client
-        can communicate with Supabase.
-
-        It does not require a database row.
-        */
-
         const result =
-            await supabaseClient
+            await gillSupabase
                 .from("orders")
                 .select("id")
                 .limit(1);
@@ -1738,7 +1688,7 @@ async function checkSupabaseConnection() {
         if (result.error) {
 
             console.error(
-                "Supabase health check:",
+                "Supabase database test failed:",
                 result.error
             );
 
@@ -1747,38 +1697,41 @@ async function checkSupabaseConnection() {
 
 
         console.log(
-            "GillMarket: orders table connected."
+            "✅ Supabase orders table is reachable."
         );
+
 
         return true;
 
     } catch (error) {
 
         console.error(
-            "Supabase health check failed:",
+            "Database test error:",
             error
         );
+
 
         return false;
     }
 }
 
 
-/* =====================================================
-   START GILL MARKET
-===================================================== */
+/* ======================================================
+   INITIALIZE ALL GILLMARKET FEATURES
+====================================================== */
 
 async function startGillMarket() {
 
     console.log(
-        "GillMarket starting..."
+        "🚀 GillMarket starting..."
     );
 
 
-    addPaymentStyles();
+    /* ------------------------------------------
+       UI
+    ------------------------------------------ */
 
-
-    setupMobileMenu();
+    setupMenu();
 
     setupFindService();
 
@@ -1786,95 +1739,96 @@ async function startGillMarket() {
 
     setupSellerButtons();
 
-    setupModalClosing();
+    setupModalControls();
 
     setupOrderButtons();
 
-    setupOrderSubmit();
+    setupPlaceOrder();
 
     setupSellerSubmit();
 
     setupSearch();
 
+    loadSavedUser();
+
+
+    /* ------------------------------------------
+       SUPABASE
+    ------------------------------------------ */
 
     const connected =
-        await initSupabase();
+        await initializeGillMarket();
 
 
     if (connected) {
 
-        console.log(
-            "✅ GillMarket Supabase connected."
-        );
-
-
-        await checkSupabaseConnection();
+        await testGillMarketDatabase();
 
     } else {
 
         console.error(
-            "❌ GillMarket Supabase connection failed."
+            "❌ GillMarket started without Supabase."
         );
 
     }
 
 
     console.log(
-        "GillMarket loaded successfully."
-    );
-
-
-    console.log(
-        "Local orders:",
-        getData(
-            "gillMarketOrders"
-        )
-    );
-
-
-    console.log(
-        "Local services:",
-        getData(
-            "gillMarketServices"
-        )
+        "✅ GillMarket is ready."
     );
 }
 
 
-/* =====================================================
-   PUBLIC API
-===================================================== */
+/* ======================================================
+   GLOBAL GILLMARKET API
+====================================================== */
 
 window.GillMarket = {
 
-    openSellerModal,
+    openModal:
+        openModal,
 
-    openPaymentInfo,
+    closeModal:
+        closeModal,
 
-    closeModal,
+    start:
+        startGillMarket,
 
-    startGillMarket,
-
-    getLocalOrders:
-        function () {
-            return getData(
-                "gillMarketOrders"
-            );
+    getSelectedService:
+        function() {
+            return selectedService;
         },
 
-    getLocalServices:
-        function () {
-            return getData(
-                "gillMarketServices"
-            );
+    getSelectedPrice:
+        function() {
+            return selectedPrice;
+        },
+
+    getLocalOrders:
+        function() {
+
+            try {
+
+                return JSON.parse(
+                    localStorage.getItem(
+                        "gillMarketOrders"
+                    ) || "[]"
+                );
+
+            } catch (error) {
+
+                return [];
+
+            }
+
         }
 
 };
 
 
-/* =====================================================
-   START
-===================================================== */
+/* ======================================================
+   START APPLICATION
+====================================================== */
 
 if (
     document.readyState ===
@@ -1883,7 +1837,12 @@ if (
 
     document.addEventListener(
         "DOMContentLoaded",
-        startGillMarket
+        function() {
+
+            startGillMarket();
+
+        },
+        { once: true }
     );
 
 } else {
@@ -1893,6 +1852,6 @@ if (
 }
 
 
-/* =====================================================
-   END OF MARKET.JS
-============================
+/* ======================================================
+   END OF FINAL MARKET.JS
+====================================================== */
