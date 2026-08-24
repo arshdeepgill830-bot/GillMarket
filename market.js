@@ -1,27 +1,13 @@
 "use strict";
 
 /*
-    =========================================================
-    GILL MARKET
-    FINAL FRONT-END VERSION
-    =========================================================
-
-    This version works without Supabase.
-
-    Orders and seller services are saved in localStorage.
-
-    IMPORTANT:
-    localStorage is only browser/device storage.
-    It is NOT a real online database.
-
-    Real online payments and permanent multi-user
-    database will need a backend/payment gateway later.
+=========================================================
+GILL MARKET
+Final frontend JavaScript
+No Vercel required
+Data is saved in browser LocalStorage
+=========================================================
 */
-
-
-/* =========================================================
-   SETTINGS
-   ========================================================= */
 
 const COMMISSION = 30;
 
@@ -29,105 +15,100 @@ let selectedService = "";
 let selectedPrice = 0;
 
 
-/* =========================================================
+/* =====================================================
    HELPERS
-   ========================================================= */
+===================================================== */
 
-function get(id) {
+function $(id) {
     return document.getElementById(id);
 }
-
 
 function showMessage(message) {
     alert(message);
 }
 
-
 function openModal(id) {
-
-    const modal = get(id);
+    const modal = $(id);
 
     if (modal) {
         modal.classList.add("show");
     }
 }
 
-
 function closeModal(id) {
-
-    const modal = get(id);
+    const modal = $(id);
 
     if (modal) {
         modal.classList.remove("show");
     }
 }
 
+function saveData(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
 
-/* =========================================================
+function getData(key) {
+    try {
+        return JSON.parse(
+            localStorage.getItem(key) || "[]"
+        );
+    } catch (error) {
+        return [];
+    }
+}
+
+
+/* =====================================================
    MOBILE MENU
-   ========================================================= */
+===================================================== */
 
-const menuBtn = get("menuBtn");
-const nav = get("nav");
+const menuBtn = $("menuBtn");
+const nav = $("nav");
 
 if (menuBtn && nav) {
 
     menuBtn.addEventListener("click", function () {
-
         nav.classList.toggle("open");
-
     });
-
-}
-
-
-/* Close mobile menu after navigation */
-
-if (nav) {
 
     nav.querySelectorAll("a").forEach(function (link) {
 
         link.addEventListener("click", function () {
-
             nav.classList.remove("open");
-
         });
 
     });
-
 }
 
 
-/* =========================================================
+/* =====================================================
    FIND SERVICE
-   ========================================================= */
+===================================================== */
 
-const findBtn = get("findBtn");
+const findBtn = $("findBtn");
 
 if (findBtn) {
 
     findBtn.addEventListener("click", function () {
 
-        const services = get("services");
+        const services = $("services");
 
         if (services) {
-
             services.scrollIntoView({
                 behavior: "smooth"
             });
-
         }
 
     });
-
 }
 
 
-/* =========================================================
+/* =====================================================
    LOGIN
-   ========================================================= */
+===================================================== */
 
-const loginBtn = get("loginBtn");
+const loginBtn = $("loginBtn");
+const continueBtn = $("continueBtn");
 
 if (loginBtn) {
 
@@ -139,64 +120,38 @@ if (loginBtn) {
         const savedEmail =
             localStorage.getItem("gillMarketEmail") || "";
 
-
-        if (get("loginName")) {
-            get("loginName").value = savedName;
+        if ($("loginName")) {
+            $("loginName").value = savedName;
         }
 
-        if (get("loginEmail")) {
-            get("loginEmail").value = savedEmail;
+        if ($("loginEmail")) {
+            $("loginEmail").value = savedEmail;
         }
-
 
         openModal("loginModal");
-
     });
-
 }
 
-
-/* Continue login */
-
-const continueBtn = get("continueBtn");
 
 if (continueBtn) {
 
     continueBtn.addEventListener("click", function () {
 
         const name =
-            get("loginName")?.value.trim();
+            $("loginName").value.trim();
 
         const email =
-            get("loginEmail")?.value.trim();
+            $("loginEmail").value.trim();
 
 
         if (!name) {
-
-            showMessage(
-                "Please enter your name."
-            );
-
+            showMessage("Please enter your name.");
             return;
         }
 
 
-        if (!email) {
-
-            showMessage(
-                "Please enter your email."
-            );
-
-            return;
-        }
-
-
-        if (!email.includes("@")) {
-
-            showMessage(
-                "Please enter a valid email address."
-            );
-
+        if (!email || !email.includes("@")) {
+            showMessage("Please enter a valid email.");
             return;
         }
 
@@ -218,52 +173,40 @@ if (continueBtn) {
             "! 🎉"
         );
 
-
         closeModal("loginModal");
-
     });
-
 }
 
 
-/* =========================================================
+/* =====================================================
    SELLER MODAL
-   ========================================================= */
+===================================================== */
 
-function openSeller() {
-
+function openSellerModal() {
     openModal("sellerModal");
-
 }
 
-
-const sellBtn = get("sellBtn");
+const sellBtn = $("sellBtn");
+const sellHeroBtn = $("sellHeroBtn");
 
 if (sellBtn) {
-
     sellBtn.addEventListener(
         "click",
-        openSeller
+        openSellerModal
     );
-
 }
-
-
-const sellHeroBtn = get("sellHeroBtn");
 
 if (sellHeroBtn) {
-
     sellHeroBtn.addEventListener(
         "click",
-        openSeller
+        openSellerModal
     );
-
 }
 
 
-/* =========================================================
+/* =====================================================
    CLOSE BUTTONS
-   ========================================================= */
+===================================================== */
 
 document
     .querySelectorAll("[data-close]")
@@ -277,16 +220,15 @@ document
                     button.getAttribute("data-close");
 
                 closeModal(modalId);
-
             }
         );
 
     });
 
 
-/* =========================================================
+/* =====================================================
    CLOSE MODAL BY CLICKING OUTSIDE
-   ========================================================= */
+===================================================== */
 
 document
     .querySelectorAll(".modal")
@@ -297,9 +239,7 @@ document
             function (event) {
 
                 if (event.target === modal) {
-
                     modal.classList.remove("show");
-
                 }
 
             }
@@ -308,9 +248,9 @@ document
     });
 
 
-/* =========================================================
-   ESC KEY CLOSE
-   ========================================================= */
+/* =====================================================
+   ESCAPE KEY CLOSES MODAL
+===================================================== */
 
 document.addEventListener(
     "keydown",
@@ -332,9 +272,9 @@ document.addEventListener(
 );
 
 
-/* =========================================================
+/* =====================================================
    ORDER BUTTONS
-   ========================================================= */
+===================================================== */
 
 document
     .querySelectorAll(".order-btn")
@@ -348,18 +288,13 @@ document
                     button.dataset.name || "";
 
                 selectedPrice =
-                    Number(
-                        button.dataset.price || 0
-                    );
+                    Number(button.dataset.price || 0);
 
 
-                if (
-                    !selectedService ||
-                    selectedPrice <= 0
-                ) {
+                if (!selectedService || selectedPrice <= 0) {
 
                     showMessage(
-                        "Service information is unavailable."
+                        "This service is currently unavailable."
                     );
 
                     return;
@@ -367,47 +302,32 @@ document
 
 
                 const commissionAmount =
-                    selectedPrice *
-                    COMMISSION /
-                    100;
-
+                    selectedPrice * COMMISSION / 100;
 
                 const sellerAmount =
-                    selectedPrice -
-                    commissionAmount;
+                    selectedPrice - commissionAmount;
 
 
-                const summary =
-                    get("orderSummary");
-
+                const summary = $("summary");
 
                 if (summary) {
 
                     summary.innerHTML =
-
                         "<strong>" +
                         selectedService +
-                        "</strong>" +
-
-                        "<br><br>" +
+                        "</strong><br><br>" +
 
                         "Order Price: ₹" +
                         selectedPrice.toFixed(2) +
 
-                        "<br>" +
-
-                        "GillMarket 30%: ₹" +
+                        "<br>GillMarket 30%: ₹" +
                         commissionAmount.toFixed(2) +
 
-                        "<br>" +
-
-                        "Seller 70%: ₹" +
+                        "<br>Seller 70%: ₹" +
                         sellerAmount.toFixed(2);
 
                 }
 
-
-                /* Prefill saved customer information */
 
                 const savedName =
                     localStorage.getItem(
@@ -420,30 +340,29 @@ document
                     ) || "";
 
 
-                if (get("customerName")) {
-                    get("customerName").value =
+                if ($("customerName")) {
+                    $("customerName").value =
                         savedName;
                 }
 
-                if (get("customerEmail")) {
-                    get("customerEmail").value =
+                if ($("customerEmail")) {
+                    $("customerEmail").value =
                         savedEmail;
                 }
 
 
                 openModal("orderModal");
-
             }
         );
 
     });
 
 
-/* =========================================================
+/* =====================================================
    SUBMIT ORDER
-   ========================================================= */
+===================================================== */
 
-const submitOrder = get("submitOrder");
+const submitOrder = $("submitOrder");
 
 if (submitOrder) {
 
@@ -452,29 +371,13 @@ if (submitOrder) {
         function () {
 
             const customerName =
-                get("customerName")
-                    ?.value
-                    .trim();
+                $("customerName").value.trim();
 
             const customerEmail =
-                get("customerEmail")
-                    ?.value
-                    .trim();
+                $("customerEmail").value.trim();
 
             const details =
-                get("details")
-                    ?.value
-                    .trim();
-
-
-            if (!selectedService) {
-
-                showMessage(
-                    "Please select a service first."
-                );
-
-                return;
-            }
+                $("details").value.trim();
 
 
             if (!customerName) {
@@ -487,20 +390,13 @@ if (submitOrder) {
             }
 
 
-            if (!customerEmail) {
+            if (
+                !customerEmail ||
+                !customerEmail.includes("@")
+            ) {
 
                 showMessage(
-                    "Please enter your email."
-                );
-
-                return;
-            }
-
-
-            if (!customerEmail.includes("@")) {
-
-                showMessage(
-                    "Please enter a valid email address."
+                    "Please enter a valid email."
                 );
 
                 return;
@@ -517,24 +413,36 @@ if (submitOrder) {
             }
 
 
-            const commissionAmount =
-                selectedPrice *
-                COMMISSION /
-                100;
+            if (
+                !selectedService ||
+                selectedPrice <= 0
+            ) {
 
+                showMessage(
+                    "Please select a service first."
+                );
+
+                return;
+            }
+
+
+            const commissionAmount =
+                selectedPrice * COMMISSION / 100;
 
             const sellerAmount =
-                selectedPrice -
-                commissionAmount;
+                selectedPrice - commissionAmount;
+
+
+            const orderId =
+                "GM-" +
+                Date.now();
 
 
             const order = {
 
-                id:
-                    "GM-" +
-                    Date.now(),
+                id: orderId,
 
-                service:
+                service_name:
                     selectedService,
 
                 customer_name:
@@ -549,7 +457,7 @@ if (submitOrder) {
                 price:
                     selectedPrice,
 
-                commission_percent:
+                commission:
                     COMMISSION,
 
                 commission_amount:
@@ -567,93 +475,59 @@ if (submitOrder) {
             };
 
 
-            /* Get old orders */
+            const orders =
+                getData("gillMarketOrders");
 
-            let orders = [];
-
-            try {
-
-                orders =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "gillMarketOrders"
-                        ) || "[]"
-                    );
-
-                if (!Array.isArray(orders)) {
-                    orders = [];
-                }
-
-            } catch (error) {
-
-                orders = [];
-
-            }
-
-
-            /* Add new order */
 
             orders.push(order);
 
 
-            /* Save */
-
-            localStorage.setItem(
+            saveData(
                 "gillMarketOrders",
-                JSON.stringify(orders)
+                orders
             );
 
 
-            /* Success */
-
             showMessage(
-
-                "Order successfully submitted! 🎉" +
+                "Order submitted successfully! 🎉" +
 
                 "\n\nOrder ID: " +
-                order.id +
+                orderId +
 
                 "\nService: " +
-                order.service +
+                selectedService +
 
                 "\nPrice: ₹" +
-                order.price +
+                selectedPrice +
 
                 "\nGillMarket 30%: ₹" +
                 commissionAmount.toFixed(2) +
 
                 "\nSeller 70%: ₹" +
                 sellerAmount.toFixed(2)
-
             );
 
 
             closeModal("orderModal");
 
 
-            /* Clear details */
-
-            if (get("details")) {
-                get("details").value = "";
-            }
-
-
-            /* Keep customer name/email */
+            $("customerName").value = "";
+            $("customerEmail").value = "";
+            $("details").value = "";
 
             selectedService = "";
             selectedPrice = 0;
 
         }
     );
-
 }
 
 
-/* =========================================================
+/* =====================================================
    SELLER SERVICE SUBMISSION
-   ========================================================= */
+===================================================== */
 
-const submitSeller = get("submitSeller");
+const submitSeller = $("submitSeller");
 
 if (submitSeller) {
 
@@ -662,24 +536,19 @@ if (submitSeller) {
         function () {
 
             const sellerName =
-                get("sellerName")
-                    ?.value
-                    .trim();
+                $("sellerName").value.trim();
 
             const sellerService =
-                get("sellerService")
-                    ?.value
-                    .trim();
+                $("sellerService").value.trim();
 
             const sellerPrice =
                 Number(
-                    get("sellerPrice")
-                        ?.value
+                    $("sellerPrice").value
                 );
 
             const sellerDescription =
-                get("sellerDescription")
-                    ?.value
+                $("sellerDescription")
+                    .value
                     .trim();
 
 
@@ -703,10 +572,7 @@ if (submitSeller) {
             }
 
 
-            if (
-                !sellerPrice ||
-                sellerPrice <= 0
-            ) {
+            if (!sellerPrice || sellerPrice <= 0) {
 
                 showMessage(
                     "Please enter a valid price."
@@ -744,8 +610,12 @@ if (submitSeller) {
                 description:
                     sellerDescription,
 
-                commission_percent:
+                commission:
                     COMMISSION,
+
+                seller_amount:
+                    sellerPrice -
+                    (sellerPrice * COMMISSION / 100),
 
                 status:
                     "pending",
@@ -756,39 +626,20 @@ if (submitSeller) {
             };
 
 
-            let services = [];
-
-            try {
-
-                services =
-                    JSON.parse(
-                        localStorage.getItem(
-                            "gillMarketServices"
-                        ) || "[]"
-                    );
-
-                if (!Array.isArray(services)) {
-                    services = [];
-                }
-
-            } catch (error) {
-
-                services = [];
-
-            }
+            const services =
+                getData("gillMarketServices");
 
 
             services.push(service);
 
 
-            localStorage.setItem(
+            saveData(
                 "gillMarketServices",
-                JSON.stringify(services)
+                services
             );
 
 
             showMessage(
-
                 "Your service was submitted successfully! 🎉" +
 
                 "\n\nService: " +
@@ -797,62 +648,46 @@ if (submitSeller) {
                 "\nPrice: ₹" +
                 sellerPrice +
 
-                "\nCommission: " +
+                "\nGillMarket commission: " +
                 COMMISSION +
                 "%"
-
             );
 
 
             closeModal("sellerModal");
 
 
-            /* Clear seller form */
-
-            if (get("sellerName")) {
-                get("sellerName").value = "";
-            }
-
-            if (get("sellerService")) {
-                get("sellerService").value = "";
-            }
-
-            if (get("sellerPrice")) {
-                get("sellerPrice").value = "";
-            }
-
-            if (get("sellerDescription")) {
-                get("sellerDescription").value = "";
-            }
+            $("sellerName").value = "";
+            $("sellerService").value = "";
+            $("sellerPrice").value = "";
+            $("sellerDescription").value = "";
 
         }
     );
-
 }
 
 
-/* =========================================================
-   DEBUG / TEST
-   ========================================================= */
+/* =====================================================
+   START
+===================================================== */
 
-console.log(
-    "GillMarket loaded successfully."
-);
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-console.log(
-    "Saved orders:",
-    JSON.parse(
-        localStorage.getItem(
-            "gillMarketOrders"
-        ) || "[]"
-    )
-);
+        console.log(
+            "GillMarket loaded successfully."
+        );
 
-console.log(
-    "Saved services:",
-    JSON.parse(
-        localStorage.getItem(
-            "gillMarketServices"
-        ) || "[]"
-    )
+        console.log(
+            "Orders:",
+            getData("gillMarketOrders")
+        );
+
+        console.log(
+            "Services:",
+            getData("gillMarketServices")
+        );
+
+    }
 );
