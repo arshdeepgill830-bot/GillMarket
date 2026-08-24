@@ -1,17 +1,18 @@
 "use strict";
 
 /* =====================================================
-   GILLMARKET FINAL market.js
+   GILLMARKET
+   FINAL market.js
    PART 1 / 5
 ===================================================== */
+
+/* =========================
+   CONFIG
+========================= */
 
 const GILLMARKET_SUPABASE_URL =
     "https://sbdadnfeutymqoelaydo.supabase.co";
 
-/*
-  अपनी Supabase Publishable/anon key यहाँ रखें.
-  Secret/service_role key यहाँ कभी नहीं डालनी.
-*/
 const GILLMARKET_SUPABASE_KEY =
     "YOUR_SUPABASE_PUBLISHABLE_KEY";
 
@@ -27,49 +28,88 @@ const GILLMARKET_VERIFY_PAYMENT_API =
 const GILLMARKET_COMMISSION =
     30;
 
+
+/* =========================
+   GLOBAL VARIABLES
+========================= */
+
 let gillSupabase = null;
+
 let selectedService = "";
+
 let selectedPrice = 0;
+
 let selectedServiceId = "";
 
 
 /* =========================
-   HELPER
+   ELEMENT HELPER
 ========================= */
 
 function gm(id) {
+
     return document.getElementById(id);
+
 }
 
 
+/* =========================
+   SAFE HTML
+========================= */
+
 function escapeHTML(value) {
+
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+
 }
 
+
+/* =========================
+   MESSAGE
+========================= */
 
 function showMessage(message) {
-    alert(String(message));
+
+    alert(
+        String(message)
+    );
+
 }
 
 
+/* =========================
+   COMMISSION
+========================= */
+
 function calculateCommission(amount) {
+
+    const total =
+        Number(amount) || 0;
+
     return Number(
         (
-            Number(amount) *
+            total *
             GILLMARKET_COMMISSION /
             100
         ).toFixed(2)
     );
+
 }
 
 
+/* =========================
+   SELLER AMOUNT
+========================= */
+
 function calculateSellerAmount(amount) {
-    const total = Number(amount) || 0;
+
+    const total =
+        Number(amount) || 0;
 
     return Number(
         (
@@ -77,72 +117,145 @@ function calculateSellerAmount(amount) {
             calculateCommission(total)
         ).toFixed(2)
     );
+
+}
+
+
+/*
+   Example:
+
+   ₹149 order
+   Commission = ₹44.70
+   Seller = ₹104.30
+*/
+
+
+/* =========================
+   SAFE JSON RESPONSE
+========================= */
+
+async function readJSONResponse(response) {
+
+    const text =
+        await response.text();
+
+    let data = null;
+
+    try {
+
+        data =
+            text
+                ? JSON.parse(text)
+                : null;
+
+    } catch (error) {
+
+        console.error(
+            "Invalid JSON response:",
+            text
+        );
+
+        throw new Error(
+            "Server ने valid JSON नहीं भेजा."
+        );
+
+    }
+
+    return data;
+
 }
 
 
 /* =========================
-   SUPABASE
+   SUPABASE LIBRARY
 ========================= */
 
 function loadSupabase() {
 
-    return new Promise(function(resolve, reject) {
-
-        if (
-            window.supabase &&
-            typeof window.supabase.createClient ===
-            "function"
-        ) {
-            resolve();
-            return;
-        }
-
-        const script =
-            document.createElement("script");
-
-        script.src =
-            "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-
-        script.onload = function() {
+    return new Promise(
+        function(resolve, reject) {
 
             if (
                 window.supabase &&
-                typeof window.supabase.createClient ===
+                typeof
+                window.supabase.createClient ===
                 "function"
             ) {
+
                 resolve();
-            } else {
-                reject(
-                    new Error(
-                        "Supabase library नहीं मिली."
-                    )
-                );
+
+                return;
+
             }
 
-        };
 
-        script.onerror = function() {
+            const script =
+                document.createElement(
+                    "script"
+                );
 
-            reject(
-                new Error(
-                    "Supabase library load नहीं हुई."
-                )
+
+            script.src =
+                "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+
+
+            script.onload =
+                function() {
+
+                    if (
+                        window.supabase &&
+                        typeof
+                        window.supabase.createClient ===
+                        "function"
+                    ) {
+
+                        resolve();
+
+                    } else {
+
+                        reject(
+                            new Error(
+                                "Supabase library नहीं मिली."
+                            )
+                        );
+
+                    }
+
+                };
+
+
+            script.onerror =
+                function() {
+
+                    reject(
+                        new Error(
+                            "Supabase library load नहीं हुई."
+                        )
+                    );
+
+                };
+
+
+            document.head.appendChild(
+                script
             );
 
-        };
-
-        document.head.appendChild(script);
-
-    });
+        }
+    );
 
 }
 
+
+/* =========================
+   INITIALIZE SUPABASE
+========================= */
 
 async function initializeGillMarket() {
 
     try {
 
         await loadSupabase();
+
 
         if (
             !GILLMARKET_SUPABASE_KEY ||
@@ -151,10 +264,11 @@ async function initializeGillMarket() {
         ) {
 
             throw new Error(
-                "Supabase Publishable/anon key डालें."
+                "market.js में Supabase Publishable/anon key डालें."
             );
 
         }
+
 
         gillSupabase =
             window.supabase.createClient(
@@ -162,20 +276,25 @@ async function initializeGillMarket() {
                 GILLMARKET_SUPABASE_KEY
             );
 
+
         console.log(
-            "✅ GillMarket: Supabase connected"
+            "✅ GillMarket Supabase connected"
         );
 
+
         return true;
+
 
     } catch (error) {
 
         console.error(
-            "Supabase error:",
+            "❌ Supabase error:",
             error
         );
 
+
         gillSupabase = null;
+
 
         return false;
 
@@ -185,62 +304,113 @@ async function initializeGillMarket() {
 
 
 /* =========================
-   RAZORPAY
+   RAZORPAY LIBRARY
 ========================= */
 
 function loadRazorpay() {
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(
+        function(resolve, reject) {
 
-        if (window.Razorpay) {
-            resolve();
-            return;
-        }
+            if (
+                window.Razorpay
+            ) {
 
-        const script =
-            document.createElement("script");
-
-        script.src =
-            "https://checkout.razorpay.com/v1/checkout.js";
-
-        script.onload = function() {
-
-            if (window.Razorpay) {
                 resolve();
-            } else {
-                reject(
-                    new Error(
-                        "Razorpay load नहीं हुआ."
-                    )
-                );
+
+                return;
+
             }
 
-        };
 
-        script.onerror = function() {
+            const script =
+                document.createElement(
+                    "script"
+                );
 
-            reject(
-                new Error(
-                    "Razorpay script load failed."
-                )
+
+            script.src =
+                "https://checkout.razorpay.com/v1/checkout.js";
+
+
+            script.onload =
+                function() {
+
+                    if (
+                        window.Razorpay
+                    ) {
+
+                        resolve();
+
+                    } else {
+
+                        reject(
+                            new Error(
+                                "Razorpay load नहीं हुआ."
+                            )
+                        );
+
+                    }
+
+                };
+
+
+            script.onerror =
+                function() {
+
+                    reject(
+                        new Error(
+                            "Razorpay script load failed."
+                        )
+                    );
+
+                };
+
+
+            document.head.appendChild(
+                script
             );
 
-        };
-
-        document.head.appendChild(script);
-
-    });
+        }
+    );
 
 }
+
+
+/* =========================
+   GLOBAL EXPORTS
+========================= */
+
+window.gm =
+    gm;
+
+window.showMessage =
+    showMessage;
+
+window.calculateCommission =
+    calculateCommission;
+
+window.calculateSellerAmount =
+    calculateSellerAmount;
+
+window.initializeGillMarket =
+    initializeGillMarket;
+
+window.loadRazorpay =
+    loadRazorpay;
+
+window.readJSONResponse =
+    readJSONResponse;
 
 
 /* =========================
    PART 1 END
 ========================= */
 /* =====================================================
-   GILLMARKET FINAL market.js
+   GILLMARKET
+   FINAL market.js
    PART 2 / 5
-   SERVICES + SEARCH + ORDER FORM
+   SERVICES + SEARCH + ORDER MODAL
 ===================================================== */
 
 
@@ -308,14 +478,21 @@ const GILLMARKET_SERVICES = [
 
 
 /* =========================
-   FIND SERVICE
+   GET SERVICE
 ========================= */
 
-function getGillMarketService(serviceId) {
+function getGillMarketService(
+    serviceId
+) {
 
     return GILLMARKET_SERVICES.find(
         function(service) {
-            return service.id === serviceId;
+
+            return (
+                service.id ===
+                serviceId
+            );
+
         }
     );
 
@@ -336,26 +513,37 @@ function renderGillMarketServices(
         gm("serviceGrid") ||
         gm("popularServices");
 
+
     if (!container) {
+
         console.warn(
             "Services container नहीं मिला."
         );
+
         return;
+
     }
 
+
     container.innerHTML = "";
+
 
     services.forEach(
         function(service) {
 
             const card =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
+
 
             card.className =
                 "service-card";
 
+
             card.dataset.serviceId =
                 service.id;
+
 
             card.innerHTML = `
 
@@ -386,12 +574,17 @@ function renderGillMarketServices(
                     </button>
 
                 </div>
+
             `;
 
-            container.appendChild(card);
+
+            container.appendChild(
+                card
+            );
 
         }
     );
+
 
     attachServiceButtons();
 
@@ -409,17 +602,38 @@ function attachServiceButtons() {
             ".order-service-btn"
         );
 
+
     buttons.forEach(
         function(button) {
 
-            button.onclick =
-                function() {
+            /*
+             * clone करके पुराने listener
+             * duplicate होने से बचाते हैं.
+             */
+
+            const newButton =
+                button.cloneNode(true);
+
+
+            button.replaceWith(
+                newButton
+            );
+
+
+            newButton.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
 
                     openGillMarketOrder(
-                        button.dataset.serviceId
+                        newButton.dataset.serviceId
                     );
 
-                };
+                }
+            );
 
         }
     );
@@ -428,7 +642,7 @@ function attachServiceButtons() {
 
 
 /* =========================
-   OPEN ORDER
+   OPEN ORDER MODAL
 ========================= */
 
 function openGillMarketOrder(
@@ -436,7 +650,10 @@ function openGillMarketOrder(
 ) {
 
     const service =
-        getGillMarketService(serviceId);
+        getGillMarketService(
+            serviceId
+        );
+
 
     if (!service) {
 
@@ -448,6 +665,7 @@ function openGillMarketOrder(
 
     }
 
+
     selectedServiceId =
         service.id;
 
@@ -455,11 +673,12 @@ function openGillMarketOrder(
         service.name;
 
     selectedPrice =
-        service.price;
+        Number(service.price);
 
 
     const modal =
         gm("orderModal");
+
 
     if (modal) {
 
@@ -476,6 +695,7 @@ function openGillMarketOrder(
     const selectedName =
         gm("selectedServiceName");
 
+
     if (selectedName) {
 
         selectedName.textContent =
@@ -486,6 +706,7 @@ function openGillMarketOrder(
 
     const selectedPriceElement =
         gm("selectedServicePrice");
+
 
     if (selectedPriceElement) {
 
@@ -498,10 +719,17 @@ function openGillMarketOrder(
     const amount =
         gm("orderAmount");
 
+
     if (amount) {
 
         amount.value =
             service.price;
+
+        /*
+         * Customer को amount बदलने नहीं देंगे.
+         */
+        amount.readOnly =
+            true;
 
     }
 
@@ -510,9 +738,22 @@ function openGillMarketOrder(
         gm("details") ||
         gm("orderDetails");
 
+
     if (details) {
 
         details.value = "";
+
+    }
+
+
+    const name =
+        gm("customerName") ||
+        gm("customer_name");
+
+
+    if (name) {
+
+        name.focus();
 
     }
 
@@ -528,13 +769,18 @@ function closeGillMarketOrder() {
     const modal =
         gm("orderModal");
 
+
     if (!modal) {
+
         return;
+
     }
+
 
     modal.classList.remove(
         "active"
     );
+
 
     modal.style.display =
         "none";
@@ -551,9 +797,12 @@ function searchGillMarket(
 ) {
 
     const query =
-        String(searchText || "")
+        String(
+            searchText || ""
+        )
             .trim()
             .toLowerCase();
+
 
     if (!query) {
 
@@ -604,6 +853,7 @@ function attachGillMarketSearch() {
             "#serviceSearch, #searchServices, .service-search"
         );
 
+
     inputs.forEach(
         function(input) {
 
@@ -625,14 +875,23 @@ function attachGillMarketSearch() {
 
 
 /* =========================
-   GLOBAL FUNCTIONS
+   GLOBAL
 ========================= */
+
+window.getGillMarketService =
+    getGillMarketService;
+
+window.renderGillMarketServices =
+    renderGillMarketServices;
 
 window.openGillMarketOrder =
     openGillMarketOrder;
 
 window.closeGillMarketOrder =
     closeGillMarketOrder;
+
+window.searchGillMarket =
+    searchGillMarket;
 
 window.orderService =
     openGillMarketOrder;
@@ -642,7 +901,8 @@ window.orderService =
    PART 2 END
 ========================= */
 /* =====================================================
-   GILLMARKET FINAL market.js
+   GILLMARKET
+   FINAL market.js
    PART 3 / 5
    CUSTOMER + SUPABASE ORDER
 ===================================================== */
@@ -662,19 +922,27 @@ function getGillMarketCustomer() {
         gm("customerEmail") ||
         gm("customer_email");
 
+
     const name =
         nameElement
             ? nameElement.value.trim()
             : "";
+
 
     const email =
         emailElement
             ? emailElement.value.trim()
             : "";
 
+
     return {
-        name: name,
-        email: email
+
+        name:
+            name,
+
+        email:
+            email
+
     };
 
 }
@@ -690,9 +958,13 @@ function getGillMarketDetails() {
         gm("details") ||
         gm("orderDetails");
 
+
     if (!detailsElement) {
+
         return "";
+
     }
+
 
     return detailsElement.value.trim();
 
@@ -790,7 +1062,7 @@ function validateGillMarketOrder() {
 
 
 /* =========================
-   ORDER DATA
+   BUILD ORDER
 ========================= */
 
 function buildGillMarketOrder() {
@@ -798,14 +1070,22 @@ function buildGillMarketOrder() {
     const customer =
         getGillMarketCustomer();
 
-    const commission =
-        calculateCommission(
+
+    const amount =
+        Number(
             selectedPrice
         );
 
+
+    const commission =
+        calculateCommission(
+            amount
+        );
+
+
     const sellerAmount =
         calculateSellerAmount(
-            selectedPrice
+            amount
         );
 
 
@@ -827,7 +1107,7 @@ function buildGillMarketOrder() {
             getGillMarketDetails(),
 
         amount:
-            Number(selectedPrice),
+            amount,
 
         commission_percent:
             GILLMARKET_COMMISSION,
@@ -842,10 +1122,7 @@ function buildGillMarketOrder() {
             "pending",
 
         payment_status:
-            "pending",
-
-        created_at:
-            new Date().toISOString()
+            "pending"
 
     };
 
@@ -853,7 +1130,7 @@ function buildGillMarketOrder() {
 
 
 /* =========================
-   CREATE SUPABASE ORDER
+   CREATE ORDER
 ========================= */
 
 async function createGillMarketOrder() {
@@ -862,6 +1139,7 @@ async function createGillMarketOrder() {
 
         const connected =
             await initializeGillMarket();
+
 
         if (!connected) {
 
@@ -891,9 +1169,10 @@ async function createGillMarketOrder() {
     if (result.error) {
 
         console.error(
-            "Supabase order error:",
+            "❌ Supabase order error:",
             result.error
         );
+
 
         throw new Error(
             result.error.message
@@ -908,7 +1187,7 @@ async function createGillMarketOrder() {
 
 
 /* =========================
-   UPDATE SUPABASE ORDER
+   UPDATE ORDER
 ========================= */
 
 async function updateGillMarketOrder(
@@ -918,9 +1197,17 @@ async function updateGillMarketOrder(
 
     if (!gillSupabase) {
 
-        throw new Error(
-            "Supabase connected नहीं है."
-        );
+        const connected =
+            await initializeGillMarket();
+
+
+        if (!connected) {
+
+            throw new Error(
+                "Supabase connect नहीं हुआ."
+            );
+
+        }
 
     }
 
@@ -940,9 +1227,10 @@ async function updateGillMarketOrder(
     if (result.error) {
 
         console.error(
-            "Supabase update error:",
+            "❌ Supabase update error:",
             result.error
         );
+
 
         throw new Error(
             result.error.message
@@ -1001,10 +1289,8 @@ async function startGillMarketOrder() {
 
 
         /*
-          Part 4 में इसी order.id
-          को Razorpay payment से जोड़ा जाएगा.
-        */
-
+         * अब payment शुरू होगा.
+         */
 
         await startGillMarketPayment(
             order
@@ -1014,7 +1300,7 @@ async function startGillMarketOrder() {
     } catch (error) {
 
         console.error(
-            "Order error:",
+            "❌ Order error:",
             error
         );
 
@@ -1030,7 +1316,7 @@ async function startGillMarketOrder() {
 
 
 /* =========================
-   SUBMIT BUTTON
+   ORDER SUBMIT BUTTONS
 ========================= */
 
 function attachGillMarketOrderButton() {
@@ -1044,11 +1330,27 @@ function attachGillMarketOrderButton() {
     buttons.forEach(
         function(button) {
 
-            button.addEventListener(
+            /*
+             * पुराने listeners हटाने के लिए
+             * button clone किया जा रहा है.
+             */
+
+            const newButton =
+                button.cloneNode(true);
+
+
+            button.replaceWith(
+                newButton
+            );
+
+
+            newButton.addEventListener(
                 "click",
                 function(event) {
 
                     event.preventDefault();
+                    event.stopPropagation();
+
 
                     startGillMarketOrder();
 
@@ -1065,6 +1367,24 @@ function attachGillMarketOrderButton() {
    GLOBAL
 ========================= */
 
+window.getGillMarketCustomer =
+    getGillMarketCustomer;
+
+window.getGillMarketDetails =
+    getGillMarketDetails;
+
+window.validateGillMarketOrder =
+    validateGillMarketOrder;
+
+window.buildGillMarketOrder =
+    buildGillMarketOrder;
+
+window.createGillMarketOrder =
+    createGillMarketOrder;
+
+window.updateGillMarketOrder =
+    updateGillMarketOrder;
+
 window.startGillMarketOrder =
     startGillMarketOrder;
 
@@ -1073,14 +1393,15 @@ window.startGillMarketOrder =
    PART 3 END
 ========================= */
 /* =====================================================
-   GILLMARKET FINAL market.js
+   GILLMARKET
+   FINAL market.js
    PART 4 / 5
-   RAZORPAY TEST PAYMENT
+   RAZORPAY PAYMENT + VERIFY
 ===================================================== */
 
 
 /* =========================
-   START RAZORPAY PAYMENT
+   START PAYMENT
 ========================= */
 
 async function startGillMarketPayment(order) {
@@ -1089,6 +1410,7 @@ async function startGillMarketPayment(order) {
 
         await loadRazorpay();
 
+
         if (
             !GILLMARKET_RAZORPAY_KEY_ID ||
             GILLMARKET_RAZORPAY_KEY_ID ===
@@ -1096,17 +1418,15 @@ async function startGillMarketPayment(order) {
         ) {
 
             throw new Error(
-                "Razorpay Test Key ID डालें."
+                "Razorpay Test Key ID अभी डालें."
             );
 
         }
 
 
         /*
-         * IMPORTANT:
-         * Amount server से बनेगा.
-         * Browser पर amount बदलकर payment
-         * manipulate नहीं किया जाएगा.
+         * Browser से amount नहीं भेजा जा रहा.
+         * Backend Supabase order से amount लेगा.
          */
 
         const response =
@@ -1121,23 +1441,30 @@ async function startGillMarketPayment(order) {
                     },
 
                     body: JSON.stringify({
-                        order_id: order.id
+
+                        order_id:
+                            order.id
+
                     })
+
                 }
+            );
+
+
+        const razorpayOrder =
+            await readJSONResponse(
+                response
             );
 
 
         if (!response.ok) {
 
             throw new Error(
+                razorpayOrder?.message ||
                 "Razorpay order create नहीं हुआ."
             );
 
         }
-
-
-        const razorpayOrder =
-            await response.json();
 
 
         if (
@@ -1152,13 +1479,19 @@ async function startGillMarketPayment(order) {
         }
 
 
+        /* =========================
+           RAZORPAY CHECKOUT
+        ========================= */
+
         const options = {
 
             key:
                 GILLMARKET_RAZORPAY_KEY_ID,
 
             amount:
-                razorpayOrder.amount,
+                Number(
+                    razorpayOrder.amount
+                ),
 
             currency:
                 razorpayOrder.currency ||
@@ -1218,7 +1551,7 @@ async function startGillMarketPayment(order) {
                     function() {
 
                         console.log(
-                            "Payment popup बंद किया गया."
+                            "Payment popup बंद हुआ."
                         );
 
                     }
@@ -1229,12 +1562,18 @@ async function startGillMarketPayment(order) {
 
 
         const razorpay =
-            new Razorpay(options);
+            new window.Razorpay(
+                options
+            );
 
+
+        /* =========================
+           PAYMENT FAILED
+        ========================= */
 
         razorpay.on(
             "payment.failed",
-            function(response) {
+            async function(response) {
 
                 console.error(
                     "❌ Payment failed:",
@@ -1242,22 +1581,33 @@ async function startGillMarketPayment(order) {
                 );
 
 
-                updateGillMarketOrder(
-                    order.id,
-                    {
-                        payment_status:
-                            "failed",
+                try {
 
-                        status:
-                            "payment_failed",
+                    await updateGillMarketOrder(
+                        order.id,
+                        {
 
-                        payment_error:
-                            response.error?.description ||
-                            "Payment failed"
-                    }
-                ).catch(
-                    console.error
-                );
+                            payment_status:
+                                "failed",
+
+                            status:
+                                "payment_failed",
+
+                            payment_error:
+                                response.error?.description ||
+                                "Payment failed"
+
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Failed status update error:",
+                        error
+                    );
+
+                }
 
 
                 showMessage(
@@ -1274,16 +1624,10 @@ async function startGillMarketPayment(order) {
     } catch (error) {
 
         console.error(
-            "Razorpay error:",
+            "❌ Payment start error:",
             error
         );
 
-
-        /*
-         * Order pending ही रहेगा.
-         * Payment successful मानकर
-         * यहाँ paid नहीं करेंगे.
-         */
 
         showMessage(
             error.message ||
@@ -1357,26 +1701,23 @@ async function verifyGillMarketPayment(
 
 
         const result =
-            await response.json();
+            await readJSONResponse(
+                response
+            );
 
 
         if (!response.ok) {
 
             throw new Error(
-                result.message ||
+                result?.message ||
                 "Payment verification failed."
             );
 
         }
 
 
-        /*
-         * Server verification successful होने
-         * के बाद ही database में paid मानेंगे.
-         */
-
         if (
-            result.verified !== true
+            result?.verified !== true
         ) {
 
             throw new Error(
@@ -1384,6 +1725,15 @@ async function verifyGillMarketPayment(
             );
 
         }
+
+
+        /*
+         * IMPORTANT:
+         *
+         * Razorpay signature server पर
+         * verify होने के बाद ही
+         * order को paid करेंगे.
+         */
 
 
         const updatedOrder =
@@ -1449,7 +1799,7 @@ async function verifyGillMarketPayment(
 
         /*
          * Verification fail होने पर
-         * paid नहीं करना है.
+         * paid status नहीं लगाएँगे.
          */
 
         try {
@@ -1470,7 +1820,7 @@ async function verifyGillMarketPayment(
         } catch (updateError) {
 
             console.error(
-                "Order status update failed:",
+                "Order status update error:",
                 updateError
             );
 
@@ -1502,96 +1852,354 @@ window.verifyGillMarketPayment =
    PART 4 END
 ========================= */
 /* =====================================================
-   GILLMARKET FINAL market.js
+   GILLMARKET
+   FINAL market.js
    PART 5 / 5
-   INITIALIZATION + EVENTS
+   BUTTONS + INITIALIZATION
 ===================================================== */
 
 
 /* =========================
-   DOM READY
+   MENU
 ========================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    async function() {
+function setupMenu() {
 
-        console.log(
-            "🚀 GillMarket loading..."
+    const menuButton =
+        gm("menuBtn") ||
+        gm("menuButton") ||
+        document.querySelector(
+            '[aria-label="Menu"]'
         );
 
 
-        try {
-
-            /*
-             * Supabase connection
-             */
-            await initializeGillMarket();
+    const menu =
+        gm("mobileMenu") ||
+        gm("menu") ||
+        gm("navMenu");
 
 
-            /*
-             * Services दिखाएँ
-             */
-            renderGillMarketServices();
+    if (
+        !menuButton ||
+        !menu
+    ) {
+
+        console.warn(
+            "Menu button या menu नहीं मिला."
+        );
+
+        return;
+
+    }
 
 
-            /*
-             * Search चालू करें
-             */
-            attachGillMarketSearch();
+    menuButton.addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
 
 
-            /*
-             * Order button चालू करें
-             */
-            attachGillMarketOrderButton();
-
-
-            /*
-             * Close button
-             */
-            const closeButtons =
-                document.querySelectorAll(
-                    "#closeOrder, .close-order, .close-modal"
+            const open =
+                menu.classList.contains(
+                    "active"
                 );
 
 
-            closeButtons.forEach(
-                function(button) {
+            if (open) {
 
-                    button.addEventListener(
-                        "click",
-                        function() {
+                menu.classList.remove(
+                    "active"
+                );
 
-                            closeGillMarketOrder();
+                menu.style.display =
+                    "none";
 
-                        }
+            } else {
+
+                menu.classList.add(
+                    "active"
+                );
+
+                menu.style.display =
+                    "flex";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================
+   FIND SERVICE
+========================= */
+
+function setupFindService() {
+
+    const buttons =
+        document.querySelectorAll(
+            "#findBtn, #findServiceBtn, .find-service-btn"
+        );
+
+
+    buttons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+
+                    const search =
+                        gm("serviceSearch") ||
+                        gm("searchServices");
+
+
+                    if (search) {
+
+                        search.scrollIntoView({
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "center"
+
+                        });
+
+
+                        setTimeout(
+                            function() {
+
+                                search.focus();
+
+                            },
+                            400
+                        );
+
+
+                        return;
+
+                    }
+
+
+                    const services =
+                        gm("services") ||
+                        gm("servicesGrid") ||
+                        gm("popularServices");
+
+
+                    if (services) {
+
+                        services.scrollIntoView({
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "start"
+
+                        });
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   SELL SERVICE
+========================= */
+
+function setupSellerButtons() {
+
+    const buttons =
+        document.querySelectorAll(
+            "#sellBtn, #sellHeroBtn, #startSellingBtn, .sell-service-btn, .start-selling-btn"
+        );
+
+
+    buttons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+
+                    const sellerModal =
+                        gm("sellerModal") ||
+                        gm("sellModal");
+
+
+                    if (sellerModal) {
+
+                        sellerModal.style.display =
+                            "flex";
+
+                        sellerModal.classList.add(
+                            "active"
+                        );
+
+                        return;
+
+                    }
+
+
+                    const sellerSection =
+                        gm("sellerSection") ||
+                        gm("freelancerSection");
+
+
+                    if (sellerSection) {
+
+                        sellerSection.scrollIntoView({
+                            behavior:
+                                "smooth",
+
+                            block:
+                                "start"
+
+                        });
+
+                        return;
+
+                    }
+
+
+                    showMessage(
+                        "Seller section जल्द उपलब्ध होगा."
                     );
 
                 }
             );
 
-
-            console.log(
-                "✅ GillMarket ready!"
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "❌ GillMarket initialization error:",
-                error
-            );
-
         }
+    );
 
-    }
-);
+}
 
 
 /* =========================
-   ESC KEY → CLOSE MODAL
+   LOGIN
+========================= */
+
+function setupLogin() {
+
+    const buttons =
+        document.querySelectorAll(
+            "#loginBtn, #loginButton, .login-btn"
+        );
+
+
+    buttons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+
+                    const loginModal =
+                        gm("loginModal");
+
+
+                    if (loginModal) {
+
+                        loginModal.style.display =
+                            "flex";
+
+                        loginModal.classList.add(
+                            "active"
+                        );
+
+                    } else {
+
+                        showMessage(
+                            "Login feature जल्द उपलब्ध होगा."
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   MODAL CLOSE
+========================= */
+
+function setupModalControls() {
+
+    const buttons =
+        document.querySelectorAll(
+            "#closeOrder, " +
+            ".close-order, " +
+            ".close-modal, " +
+            ".modal-close, " +
+            "[data-close-modal]"
+        );
+
+
+    buttons.forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function(event) {
+
+                    event.preventDefault();
+
+
+                    const modal =
+                        button.closest(
+                            ".modal"
+                        );
+
+
+                    if (modal) {
+
+                        modal.classList.remove(
+                            "active"
+                        );
+
+                        modal.style.display =
+                            "none";
+
+                    } else {
+
+                        closeGillMarketOrder();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================
+   ESC KEY
 ========================= */
 
 document.addEventListener(
@@ -1599,10 +2207,29 @@ document.addEventListener(
     function(event) {
 
         if (
-            event.key === "Escape"
+            event.key ===
+            "Escape"
         ) {
 
             closeGillMarketOrder();
+
+
+            document
+                .querySelectorAll(
+                    ".modal.active"
+                )
+                .forEach(
+                    function(modal) {
+
+                        modal.classList.remove(
+                            "active"
+                        );
+
+                        modal.style.display =
+                            "none";
+
+                    }
+                );
 
         }
 
@@ -1611,7 +2238,7 @@ document.addEventListener(
 
 
 /* =========================
-   CLICK OUTSIDE MODAL
+   OUTSIDE MODAL CLICK
 ========================= */
 
 document.addEventListener(
@@ -1636,7 +2263,7 @@ document.addEventListener(
 
 
 /* =========================
-   SERVICE CARD CLICK
+   ORDER BUTTON
 ========================= */
 
 document.addEventListener(
@@ -1645,49 +2272,31 @@ document.addEventListener(
 
         const button =
             event.target.closest(
-                "[data-service-id]"
+                ".order-service-btn"
             );
 
 
         if (!button) {
-            return;
-        }
-
-
-        /*
-         * अगर Order button नहीं है,
-         * तो card से भी order खोल सकते हैं.
-         */
-
-        if (
-            button.classList.contains(
-                "order-service-btn"
-            )
-        ) {
 
             return;
 
         }
 
 
-        const serviceId =
-            button.dataset.serviceId;
+        event.preventDefault();
+        event.stopPropagation();
 
 
-        if (serviceId) {
-
-            openGillMarketOrder(
-                serviceId
-            );
-
-        }
+        openGillMarketOrder(
+            button.dataset.serviceId
+        );
 
     }
 );
 
 
 /* =========================
-   CHECK GILLMARKET CONFIG
+   CONFIGURATION CHECK
 ========================= */
 
 function checkGillMarketConfiguration() {
@@ -1696,8 +2305,7 @@ function checkGillMarketConfiguration() {
 
 
     if (
-        typeof GILLMARKET_SUPABASE_URL ===
-        "undefined"
+        !GILLMARKET_SUPABASE_URL
     ) {
 
         problems.push(
@@ -1708,20 +2316,22 @@ function checkGillMarketConfiguration() {
 
 
     if (
-        typeof GILLMARKET_SUPABASE_ANON_KEY ===
-        "undefined"
+        !GILLMARKET_SUPABASE_KEY ||
+        GILLMARKET_SUPABASE_KEY ===
+        "YOUR_SUPABASE_PUBLISHABLE_KEY"
     ) {
 
         problems.push(
-            "Supabase anon key missing"
+            "Supabase Publishable/anon key missing"
         );
 
     }
 
 
     if (
-        typeof GILLMARKET_RAZORPAY_KEY_ID ===
-        "undefined"
+        !GILLMARKET_RAZORPAY_KEY_ID ||
+        GILLMARKET_RAZORPAY_KEY_ID ===
+        "YOUR_RAZORPAY_TEST_KEY_ID"
     ) {
 
         problems.push(
@@ -1731,12 +2341,15 @@ function checkGillMarketConfiguration() {
     }
 
 
-    if (problems.length) {
+    if (
+        problems.length > 0
+    ) {
 
         console.warn(
             "⚠️ GillMarket configuration:",
             problems
         );
+
 
         return false;
 
@@ -1749,7 +2362,7 @@ function checkGillMarketConfiguration() {
 
 
 /* =========================
-   DEBUG INFORMATION
+   DEBUG
 ========================= */
 
 window.GillMarketDebug = {
@@ -1773,7 +2386,87 @@ window.GillMarketDebug = {
 
 
 /* =========================
-   FINAL MESSAGE
+   DOM READY
+========================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function() {
+
+        console.log(
+            "🚀 GillMarket loading..."
+        );
+
+
+        try {
+
+            await initializeGillMarket();
+
+
+            renderGillMarketServices();
+
+
+            attachGillMarketSearch();
+
+
+            attachGillMarketOrderButton();
+
+
+            setupMenu();
+
+
+            setupFindService();
+
+
+            setupSellerButtons();
+
+
+            setupLogin();
+
+
+            setupModalControls();
+
+
+            console.log(
+                "✅ GillMarket ready!"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "❌ GillMarket initialization error:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   GLOBAL FUNCTIONS
+========================= */
+
+window.setupMenu =
+    setupMenu;
+
+window.setupFindService =
+    setupFindService;
+
+window.setupSellerButtons =
+    setupSellerButtons;
+
+window.setupLogin =
+    setupLogin;
+
+window.setupModalControls =
+    setupModalControls;
+
+
+/* =========================
+   FINAL LOG
 ========================= */
 
 console.log(
@@ -1785,8 +2478,15 @@ console.log(
     GILLMARKET_COMMISSION + "%"
 );
 
+console.log(
+    "🛒 Order system: READY"
+);
+
+console.log(
+    "💳 Razorpay system: READY"
+);
+
 
 /* =====================================================
-   GILLMARKET market.js
    ALL 5 PARTS COMPLETE
 ===================================================== */
