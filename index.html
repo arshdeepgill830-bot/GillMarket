@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GillMarket — Digital Services Marketplace</title>
+    <title>GillMarket</title>
+    <meta name="description" content="GillMarket - Digital services marketplace">
 
     <link rel="stylesheet" href="index.css">
 </head>
@@ -12,39 +13,25 @@
 <body>
 
 <header class="header">
+    <div class="logo">Gill<span>Market</span></div>
 
-    <a href="#home" class="logo">
-        Gill<span>Market</span>
-    </a>
+    <button class="menu-btn" id="menuBtn" type="button">☰</button>
 
-    <button id="menuBtn" class="menu-btn" type="button" aria-label="Open menu">
-        ☰
-    </button>
-
-    <nav id="nav" class="nav">
-
+    <nav id="nav">
         <a href="#home">Home</a>
         <a href="#services">Services</a>
         <a href="#how">How It Works</a>
-
-        <button id="loginBtn" class="btn btn-primary" type="button">
-            Login
-        </button>
-
+        <button class="primary-btn" id="loginBtn" type="button">Login</button>
     </nav>
-
 </header>
 
 
 <main>
 
-<section id="home" class="hero">
-
+<section class="hero" id="home">
     <div class="hero-content">
 
-        <div class="badge">
-            🚀 Welcome to GillMarket
-        </div>
+        <div class="badge">🚀 Welcome to GillMarket</div>
 
         <h1>
             Find Skills.
@@ -57,272 +44,176 @@
         </p>
 
         <div class="hero-buttons">
-
-            <button id="findBtn" class="btn btn-primary" type="button">
+            <button class="primary-btn" id="findBtn" type="button">
                 Find a Service
             </button>
 
-            <button id="sellHeroBtn" class="btn btn-secondary" type="button">
+            <button class="secondary-btn" id="sellHeroBtn" type="button">
                 Sell Your Service
             </button>
-
         </div>
 
     </div>
-
 </section>
 
 
-<section id="services" class="section">
+<section id="services">
 
     <div class="section-title">
-
         <small>POPULAR SERVICES</small>
-
         <h2>What Do You Need?</h2>
-
-        <p>
-            Choose a service and place your order.
-        </p>
-
+        <p>Choose a service and place your order.</p>
     </div>
 
-
-    <div class="services-grid">
+    <div class="service-grid">
 
         <article class="service-card">
-
             <div class="service-icon">🎨</div>
-
             <h3>Thumbnail Design</h3>
-
-            <p>
-                Professional YouTube and social media thumbnails.
-            </p>
+            <p>Professional YouTube and social media thumbnails.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Thumbnail Design"
-                    data-price="99"
-                    type="button">
+                <button class="order-btn"
+                        data-name="Thumbnail Design"
+                        data-price="99"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
 
         <article class="service-card">
-
             <div class="service-icon">🎬</div>
-
             <h3>Video Editing</h3>
-
-            <p>
-                Reels, Shorts and YouTube video editing.
-            </p>
+            <p>Reels, Shorts and YouTube video editing.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹199</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Video Editing"
-                    data-price="199"
-                    type="button">
+                <button class="order-btn"
+                        data-name="Video Editing"
+                        data-price="199"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
 
         <article class="service-card">
-
             <div class="service-icon">📱</div>
-
             <h3>Social Media Design</h3>
-
-            <p>
-                Instagram posts, banners and social graphics.
-            </p>
+            <p>Instagram posts, banners and social graphics.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹149</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Social Media Design"
-                    data-price="149"
-                    type="button">
+                <button class="order-btn"
+                        data-name="Social Media Design"
+                        data-price="149"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
 
         <article class="service-card">
-
             <div class="service-icon">💻</div>
-
             <h3>Website Design</h3>
-
-            <p>
-                Modern websites for businesses and creators.
-            </p>
+            <p>Modern websites for businesses and creators.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹499</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Website Design"
-                    data-price="499"
-                    type="button">
+                <button class="order-btn"
+                        data-name="Website Design"
+                        data-price="499"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
 
         <article class="service-card">
-
             <div class="service-icon">🤖</div>
-
             <h3>AI Image Design</h3>
-
-            <p>
-                AI posters, creative images and designs.
-            </p>
+            <p>AI posters, creative images and designs.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="AI Image Design"
-                    data-price="99"
-                    type="button">
+                <button class="order-btn"
+                        data-name="AI Image Design"
+                        data-price="99"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
 
         <article class="service-card">
-
             <div class="service-icon">✍️</div>
-
             <h3>Content Writing</h3>
-
-            <p>
-                Scripts, captions and social media content.
-            </p>
+            <p>Scripts, captions and social media content.</p>
 
             <div class="card-bottom">
-
                 <strong>From ₹99</strong>
-
-                <button
-                    class="order-btn"
-                    data-name="Content Writing"
-                    data-price="99"
-                    type="button">
+                <button class="order-btn"
+                        data-name="Content Writing"
+                        data-price="99"
+                        type="button">
                     Order
                 </button>
-
             </div>
-
         </article>
 
     </div>
-
 </section>
 
 
-<section id="how" class="section">
+<section id="how">
 
     <div class="section-title">
-
         <small>SIMPLE PROCESS</small>
-
         <h2>How GillMarket Works</h2>
-
     </div>
-
 
     <div class="steps">
 
         <div class="step">
-
-            <div class="step-number">1</div>
-
+            <div class="number">1</div>
             <h3>Choose a Service</h3>
-
             <p>Find the service you need.</p>
-
         </div>
 
-
         <div class="step">
-
-            <div class="step-number">2</div>
-
+            <div class="number">2</div>
             <h3>Place an Order</h3>
-
             <p>Tell the seller what you need.</p>
-
         </div>
 
-
         <div class="step">
-
-            <div class="step-number">3</div>
-
+            <div class="number">3</div>
             <h3>Work Gets Done</h3>
-
             <p>The seller completes your order.</p>
-
         </div>
 
-
         <div class="step">
-
-            <div class="step-number">4</div>
-
+            <div class="number">4</div>
             <h3>Complete & Review</h3>
-
             <p>Approve the work and leave a review.</p>
-
         </div>
 
     </div>
-
 </section>
 
 
-<section class="section">
+<section class="seller-section">
 
     <div class="seller-box">
 
         <div>
-
             <small>FOR FREELANCERS</small>
 
             <h2>Turn Your Skills Into Income</h2>
@@ -331,14 +222,15 @@
                 Offer your skills on GillMarket and find customers.
             </p>
 
-            <div class="commission">
+            <p class="commission">
                 Platform commission:
                 <strong>30%</strong>
-            </div>
-
+            </p>
         </div>
 
-        <button id="sellBtn" class="btn btn-primary" type="button">
+        <button class="primary-btn"
+                id="sellBtn"
+                type="button">
             Start Selling
         </button>
 
@@ -349,124 +241,97 @@
 </main>
 
 
-<footer class="footer">
+<footer>
+    <div class="logo">Gill<span>Market</span></div>
 
-    <div class="logo">
-        Gill<span>Market</span>
-    </div>
-
-    <p>
-        A simple marketplace for digital services.
-    </p>
+    <p>A simple marketplace for digital services.</p>
 
     <p>
-        Platform commission: <strong>30%</strong>
+        Platform commission:
+        <strong>30%</strong>
     </p>
 
-    <p>
-        © 2026 GillMarket
-    </p>
-
+    <p>© 2026 GillMarket</p>
 </footer>
 
 
 <!-- LOGIN MODAL -->
-
-<div id="loginModal" class="modal">
+<div class="modal" id="loginModal">
 
     <div class="modal-box">
 
-        <button
-            class="close-btn"
-            data-close="loginModal"
-            type="button">
+        <button class="close-btn"
+                data-close="loginModal"
+                type="button">
             ×
         </button>
 
         <h2>Login</h2>
+        <p>Save your GillMarket profile.</p>
 
-        <p>Enter your details to continue.</p>
+        <input id="loginName"
+               type="text"
+               placeholder="Enter your name">
 
-        <input
-            id="loginName"
-            type="text"
-            placeholder="Your name"
-            autocomplete="name">
+        <input id="loginEmail"
+               type="email"
+               placeholder="Enter your email">
 
-        <input
-            id="loginEmail"
-            type="email"
-            placeholder="Your email"
-            autocomplete="email">
-
-        <button
-            id="continueBtn"
-            class="btn btn-primary full"
-            type="button">
+        <button class="primary-btn full-btn"
+                id="continueBtn"
+                type="button">
             Continue
         </button>
 
     </div>
-
 </div>
 
 
 <!-- ORDER MODAL -->
-
-<div id="orderModal" class="modal">
+<div class="modal" id="orderModal">
 
     <div class="modal-box">
 
-        <button
-            class="close-btn"
-            data-close="orderModal"
-            type="button">
+        <button class="close-btn"
+                data-close="orderModal"
+                type="button">
             ×
         </button>
 
         <h2>Place Order</h2>
 
-        <div id="orderSummary" class="summary"></div>
+        <div class="summary" id="summary"></div>
 
-        <input
-            id="customerName"
-            type="text"
-            placeholder="Your name"
-            autocomplete="name">
+        <input id="customerName"
+               type="text"
+               placeholder="Your name">
 
-        <input
-            id="customerEmail"
-            type="email"
-            placeholder="Your email"
-            autocomplete="email">
+        <input id="customerEmail"
+               type="email"
+               placeholder="Your email">
 
-        <textarea
-            id="details"
-            rows="5"
-            placeholder="Describe what you need..."></textarea>
+        <textarea id="details"
+                  rows="5"
+                  placeholder="Describe what you need..."></textarea>
 
-        <button
-            id="submitOrder"
-            class="btn btn-primary full"
-            type="button">
+        <button class="primary-btn full-btn"
+                id="submitOrder"
+                type="button">
             Submit Order
         </button>
 
     </div>
-
 </div>
 
 
 <!-- SELLER MODAL -->
-
-<div id="sellerModal" class="modal">
+<div class="modal" id="sellerModal">
 
     <div class="modal-box">
 
-        <button
-            class="close-btn"
-            data-close="sellerModal"
-            type="button">
+        <button class="close-btn"
+                data-close="sellerModal"
+                type="button">
             ×
         </button>
 
@@ -474,36 +339,30 @@
 
         <p>Create your service listing.</p>
 
-        <input
-            id="sellerName"
-            type="text"
-            placeholder="Your name">
+        <input id="sellerName"
+               type="text"
+               placeholder="Your name">
 
-        <input
-            id="sellerService"
-            type="text"
-            placeholder="Service name">
+        <input id="sellerService"
+               type="text"
+               placeholder="Service name">
 
-        <input
-            id="sellerPrice"
-            type="number"
-            min="1"
-            placeholder="Starting price ₹">
+        <input id="sellerPrice"
+               type="number"
+               min="1"
+               placeholder="Starting price ₹">
 
-        <textarea
-            id="sellerDescription"
-            rows="4"
-            placeholder="Describe your service..."></textarea>
+        <textarea id="sellerDescription"
+                  rows="4"
+                  placeholder="Describe your service..."></textarea>
 
-        <button
-            id="submitSeller"
-            class="btn btn-primary full"
-            type="button">
+        <button class="primary-btn full-btn"
+                id="submitSeller"
+                type="button">
             Submit Service
         </button>
 
     </div>
-
 </div>
 
 
