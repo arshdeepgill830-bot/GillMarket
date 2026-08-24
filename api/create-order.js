@@ -1,352 +1,107 @@
-// =====================================================
-// GillMarket
-// /api/create-order.js
-// Creates a Razorpay Order from a Supabase order
-// =====================================================
+"use strict";
 
-export default async function handler(req, res) {
+const Razorpay = require("razorpay");
+const { createClient } = require("@supabase/supabase-js");
 
-    // Only POST is allowed
-    if (req.method !== "POST") {
-        return res.status(405).json({
-            success: false,
-            message: "Method not allowed"
-        });
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+module.exports = async function handler(req, res) {
+
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      message: "Method not allowed"
+    });
+  }
+
+  try {
+
+    const { order_id } = req.body || {};
+
+    if (!order_id) {
+      return res.status(400).json({
+        message: "order_id is required"
+      });
     }
 
-    try {
-
-        const {
-            order_id
-        } = req.body || {};
-
-        if (!order_id) {
-            return res.status(400).json({
-                success: false,
-                message: "order_id is required"
-            });
-        }
-
-
-        // -------------------------------------------------
-        // Environment variables
-        // -------------------------------------------------
-
-        const supabaseUrl =
-            process.env.SUPABASE_URL;
-
-        const supabaseServiceKey =
-            process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        const razorpayKeyId =
-            process.env.RAZORPAY_KEY_ID;
-
-        const razorpayKeySecret =
-            process.env.RAZORPAY_KEY_SECRET;
-
-
-        if (
-            !supabaseUrl ||
-            !supabaseServiceKey ||
-            !razorpayKeyId ||
-            !razorpayKeySecret
-        ) {
-
-            console.error(
-                "Missing server environment variables"
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Payment server configuration incomplete"
-            });
-
-        }
-
-
-        // -------------------------------------------------
-        // Get order from Supabase
-        // -------------------------------------------------
-
-        const supabaseResponse =
-            await fetch(
-                `${supabaseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(order_id)}&select=*`,
-                {
-                    method: "GET",
-
-                    headers: {
-                        "apikey":
-                            supabaseServiceKey,
-
-                        "Authorization":
-                            `Bearer ${supabaseServiceKey}`
-                    }
-                }
-            );
-
-
-        if (!supabaseResponse.ok) {
-
-            const errorText =
-                await supabaseResponse.text();
-
-            console.error(
-                "Supabase fetch error:",
-                errorText
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Could not read order from Supabase"
-            });
-
-        }
-
-
-        const orders =
-            await supabaseResponse.json();
-
-
-        if (
-            !Array.isArray(orders) ||
-            orders.length === 0
-        ) {
-
-            return res.status(404).json({
-                success: false,
-                message: "Order not found"
-            });
-
-        }
-
-
-        const order =
-            orders[0];
-
-
-        // -------------------------------------------------
-        // Validate order
-        // -------------------------------------------------
-
-        const amount =
-            Number(order.amount);
-
-
-        if (
-            !Number.isFinite(amount) ||
-            amount <= 0
-        ) {
-
-            return res.status(400).json({
-                success: false,
-                message: "Invalid order amount"
-            });
-
-        }
-
-
-        if (
-            order.payment_status === "paid"
-        ) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "This order is already paid"
-            });
-
-        }
-
-
-        // -------------------------------------------------
-        // Convert INR to paise
-        // ₹149 = 14900 paise
-        // -------------------------------------------------
-
-        const amountInPaise =
-            Math.round(amount * 100);
-
-
-        // -------------------------------------------------
-        // Create Razorpay Order
-        // -------------------------------------------------
-
-        const razorpayAuth =
-            Buffer
-                .from(
-                    `${razorpayKeyId}:${razorpayKeySecret}`
-                )
-                .toString("base64");
-
-
-        const razorpayResponse =
-            await fetch(
-                "https://api.razorpay.com/v1/orders",
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Authorization":
-                            `Basic ${razorpayAuth}`
-
-                    },
-
-                    body: JSON.stringify({
-
-                        amount:
-                            amountInPaise,
-
-                        currency:
-                            "INR",
-
-                        receipt:
-                            `gm_${order.id}`,
-
-                        notes: {
-
-                            gillmarket_order_id:
-                                String(order.id),
-
-                            service:
-                                String(
-                                    order.service_name ||
-                                    ""
-                                )
-
-                        }
-
-                    })
-
-                }
-            );
-
-
-        const razorpayData =
-            await razorpayResponse.json();
-
-
-        if (!razorpayResponse.ok) {
-
-            console.error(
-                "Razorpay error:",
-                razorpayData
-            );
-
-            return res.status(
-                razorpayResponse.status
-            ).json({
-
-                success: false,
-
-                message:
-                    razorpayData.error?.description ||
-                    "Razorpay order creation failed"
-
-            });
-
-        }
-
-
-        // -------------------------------------------------
-        // Save Razorpay Order ID in Supabase
-        // -------------------------------------------------
-
-        const updateResponse =
-            await fetch(
-                `${supabaseUrl}/rest/v1/orders?id=eq.${encodeURIComponent(order.id)}`,
-                {
-
-                    method: "PATCH",
-
-                    headers: {
-
-                        "apikey":
-                            supabaseServiceKey,
-
-                        "Authorization":
-                            `Bearer ${supabaseServiceKey}`,
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Prefer":
-                            "return=minimal"
-
-                    },
-
-                    body: JSON.stringify({
-
-                        razorpay_order_id:
-                            razorpayData.id
-
-                    })
-
-                }
-            );
-
-
-        if (!updateResponse.ok) {
-
-            const updateError =
-                await updateResponse.text();
-
-            console.error(
-                "Supabase update error:",
-                updateError
-            );
-
-            return res.status(500).json({
-                success: false,
-                message:
-                    "Razorpay order created but database update failed"
-            });
-
-        }
-
-
-        // -------------------------------------------------
-        // Return only safe information to browser
-        // -------------------------------------------------
-
-        return res.status(200).json({
-
-            success: true,
-
-            id:
-                razorpayData.id,
-
-            amount:
-                razorpayData.amount,
-
-            currency:
-                razorpayData.currency
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "create-order error:",
-            error
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-                "Internal server error"
-
-        });
-
+    const { data: order, error } =
+      await supabase
+        .from("orders")
+        .select("id, amount, status, payment_status")
+        .eq("id", order_id)
+        .single();
+
+    if (error || !order) {
+      return res.status(404).json({
+        message: "Order not found"
+      });
     }
 
-}
+    if (order.payment_status === "paid") {
+      return res.status(400).json({
+        message: "Order already paid"
+      });
+    }
+
+    const amount = Number(order.amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({
+        message: "Invalid order amount"
+      });
+    }
+
+    const razorpayOrder =
+      await razorpay.orders.create({
+
+        amount: Math.round(amount * 100),
+
+        currency: "INR",
+
+        receipt:
+          "GM_" +
+          String(order.id).slice(0, 20),
+
+        notes: {
+          gillmarket_order_id:
+            String(order.id)
+        }
+
+      });
+
+    return res.status(200).json({
+
+      id:
+        razorpayOrder.id,
+
+      amount:
+        razorpayOrder.amount,
+
+      currency:
+        razorpayOrder.currency
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Create Razorpay order error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        error.message ||
+        "Unable to create payment order"
+    });
+
+  }
+
+};
