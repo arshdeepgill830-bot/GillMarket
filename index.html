@@ -20,7 +20,6 @@
 
     <title>GillMarket - Digital Services Marketplace</title>
 
-    <!-- MAIN CSS -->
     <link
         rel="stylesheet"
         href="index.css"
@@ -51,7 +50,10 @@
                 ☰
             </button>
 
-            <nav id="nav" class="nav">
+            <nav
+                id="nav"
+                class="nav"
+            >
 
                 <a href="#home">
                     Home
@@ -184,7 +186,10 @@
 
                 <!-- SERVICE GRID -->
 
-                <div class="services-grid">
+                <div
+                    class="services-grid"
+                    id="servicesGrid"
+                >
 
 
                     <!-- THUMBNAIL -->
@@ -413,8 +418,6 @@
             </div>
 
         </section>
-
-
         <!-- ================= HOW IT WORKS ================= -->
 
         <section
@@ -549,6 +552,7 @@
                         </strong>
 
                     </div>
+
 
                     <button
                         id="sellBtn"
@@ -724,93 +728,87 @@
         </div>
 
     </div>
+        <!-- ================= SELLER MODAL ================= -->
 
+        <div
+            id="sellerModal"
+            class="modal"
+        >
 
-    <!-- ================= SELLER MODAL ================= -->
+            <div class="modal-content">
 
-    <div
-        id="sellerModal"
-        class="modal"
-    >
+                <button
+                    class="modal-close"
+                    type="button"
+                    data-close="sellerModal"
+                >
+                    ×
+                </button>
 
-        <div class="modal-content">
+                <h2>
+                    Start Selling
+                </h2>
 
-            <button
-                class="modal-close"
-                type="button"
-                data-close="sellerModal"
-            >
-                ×
-            </button>
+                <p>
+                    Add your digital service to
+                    GillMarket.
+                </p>
 
-            <h2>
-                Start Selling
-            </h2>
+                <label for="sellerName">
+                    Your name
+                </label>
 
-            <p>
-                Add your digital service to
-                GillMarket.
-            </p>
+                <input
+                    id="sellerName"
+                    type="text"
+                    placeholder="Your name"
+                >
 
-            <label for="sellerName">
-                Your name
-            </label>
+                <label for="sellerService">
+                    Service name
+                </label>
 
-            <input
-                id="sellerName"
-                type="text"
-                placeholder="Your name"
-            >
+                <input
+                    id="sellerService"
+                    type="text"
+                    placeholder="Example: Logo Design"
+                >
 
-            <label for="sellerService">
-                Service name
-            </label>
+                <label for="sellerPrice">
+                    Starting price
+                </label>
 
-            <input
-                id="sellerService"
-                type="text"
-                placeholder="Example: Logo Design"
-            >
+                <input
+                    id="sellerPrice"
+                    type="number"
+                    min="1"
+                    placeholder="Example: 199"
+                >
 
-            <label for="sellerPrice">
-                Starting price
-            </label>
+                <label for="sellerDescription">
+                    Service description
+                </label>
 
-            <input
-                id="sellerPrice"
-                type="number"
-                min="1"
-                placeholder="Example: 199"
-            >
+                <textarea
+                    id="sellerDescription"
+                    rows="5"
+                    placeholder="Describe your service..."
+                ></textarea>
 
-            <label for="sellerDescription">
-                Service description
-            </label>
+                <button
+                    id="submitSeller"
+                    class="btn btn-primary full-btn"
+                    type="button"
+                >
+                    Submit Service
+                </button>
 
-            <textarea
-                id="sellerDescription"
-                rows="5"
-                placeholder="Describe your service..."
-            ></textarea>
-
-            <button
-                id="submitSeller"
-                class="btn btn-primary full-btn"
-                type="button"
-            >
-                Submit Service
-            </button>
+            </div>
 
         </div>
 
-    </div>
-
 
     <!-- ================= JAVASCRIPT ================= -->
-
-    <!-- IMPORTANT:
-         market.js is in the ROOT of GillMarket repository.
-    -->
 
     <script
         src="market.js"
